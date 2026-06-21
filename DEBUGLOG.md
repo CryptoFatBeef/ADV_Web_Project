@@ -53,6 +53,39 @@ Any related docs, Stack Overflow links, or Django docs sections worth bookmarkin
 
 ---
 
+### [2026-06-22] — dojos App: DojoEntity & DojoStaff Models
+
+**Status:** Resolved **Severity:** N/A **App / Module:** dojos **Environment:** Dev
+
+**Symptom:** N/A — planned build step.
+
+**Root Cause:** N/A
+
+**Fix Applied:**
+
+- `apps/dojos/models.py`: Created `DojoEntity` (name, slug unique, address, district TextChoices, phone blank=True, is_active, created_at auto) and `DojoStaff` (FK→DojoEntity PROTECT, FK→accounts.User PROTECT, role TextChoices: HEAD_COACH/ASSISTANT_COACH/ADMIN_STAFF, joined_date DateField, is_active)
+- `apps/dojos/admin.py`: Registered `DojoEntity` with `DojoStaffInline` (TabularInline); `list_display` for entity: name/district/is_active; registered `DojoStaff` directly with user/dojo/role/is_active; `prepopulated_fields` for slug
+- `apps/dojos/migrations/0001_initial.py`: Generated and applied — `DojoEntity`, `DojoStaff`, `unique_head_coach_per_dojo` constraint all green
+
+**Decisions:**
+
+- `DojoStaff.role` is a per-dojo position entirely separate from `accounts.User.role` (system-level RBAC) — two different concepts intentionally modelled separately
+- `UniqueConstraint` with `condition=Q(role='HEAD_COACH')` enforces exactly one HEAD_COACH per dojo at the DB level; a second assignment raises `IntegrityError`
+- `on_delete=PROTECT` on both FKs — a dojo with staff records cannot be deleted; staff record must be cleared first
+- No FK to `members` app — dojos stays upstream in the dependency chain
+
+**Constraint Behaviour:**
+
+- Partial unique index (`unique_head_coach_per_dojo`) is enforced at the database level via PostgreSQL partial index (or SQLite equivalent); attempting to insert a second HEAD_COACH for the same dojo raises `django.db.utils.IntegrityError`
+- ASSISTANT_COACH and ADMIN_STAFF roles are unconstrained in count — multiple allowed per dojo
+
+**Prevention / Notes:**
+
+- Slug must be set at creation — `prepopulated_fields` handles this in admin; API serializers will need explicit slug handling when that layer is built
+- District choices list derived from HK districts mentioned in Blueprint V0.7.1; can be extended as new branches open
+
+---
+
 ### [2026-06-22] — accounts App: CustomUser Model & First Migration
 
 **Status:** Resolved **Severity:** N/A **App / Module:** accounts **Environment:** Dev

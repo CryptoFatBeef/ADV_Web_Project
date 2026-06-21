@@ -1,1 +1,21 @@
 from django.contrib import admin
+
+from .models import DojoEntity, DojoStaff
+
+
+class DojoStaffInline(admin.TabularInline):
+    model = DojoStaff
+    extra = 1
+    fields = ('user', 'role', 'joined_date', 'is_active')
+
+
+@admin.register(DojoEntity)
+class DojoEntityAdmin(admin.ModelAdmin):
+    list_display = ('name', 'district', 'is_active')
+    prepopulated_fields = {'slug': ('name',)}
+    inlines = [DojoStaffInline]
+
+
+@admin.register(DojoStaff)
+class DojoStaffAdmin(admin.ModelAdmin):
+    list_display = ('user', 'dojo', 'role', 'is_active')
