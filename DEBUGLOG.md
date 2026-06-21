@@ -53,6 +53,39 @@ Any related docs, Stack Overflow links, or Django docs sections worth bookmarkin
 
 ---
 
+### [2026-06-22] — members App: MemberProfile & MemberDojoEnrollment Models
+
+**Status:** Resolved **Severity:** N/A **App / Module:** members **Environment:** Dev
+
+**Symptom:** N/A — planned build step.
+
+**Root Cause:** N/A
+
+**Fix Applied:**
+
+- `apps/members/models.py`: Created three top-level `TextChoices` enums — `BeltLevel` (11 levels WHITE→BLACK in ascending order), `MemberTier` (COLOUR_BELT/POOM/STUDENT_BLACK/ADULT_BLACK/OVERSEAS_BLACK mapped to annual fee amounts), `MemberStatus` (ACTIVE/INACTIVE/SUSPENDED/GRADUATED)
+- `MemberProfile`: OneToOneField→accounts.User (PROTECT), `member_id` (unique CharField, club-assigned), `date_of_birth`, `gender` (inner TextChoices), `emergency_contact_name/phone`, `current_belt` (default WHITE), `tier` (default COLOUR_BELT), `status` (default ACTIVE), `primary_dojo` FK→dojos.DojoEntity (PROTECT), `joined_date`, `notes` (blank=True), `created_at`/`updated_at` (auto); properties: `full_name`, `age`, `is_active`
+- `MemberDojoEnrollment`: FK→MemberProfile (CASCADE), FK→dojos.DojoEntity (PROTECT), `enrolled_date`, `is_active`; `UniqueConstraint(fields=['member','dojo'])` — raises IntegrityError on duplicate enrollment
+- `apps/members/admin.py`: `MemberDojoEnrollmentInline` (TabularInline) inside `MemberProfileAdmin`; list_display: member_id/full_name/current_belt/tier/status/primary_dojo; list_filter: status/tier/current_belt/primary_dojo; search_fields: member_id/user__first_name/user__last_name/user__email; readonly_fields: created_at/updated_at
+- `apps/members/migrations/0001_initial.py`: Generated and applied — `MemberProfile`, `MemberDojoEnrollment`, `unique_member_dojo_enrollment` constraint all green
+
+**Decisions:**
+
+- `BeltLevel` and `MemberTier` are intentionally separate — a poom-belt student and a colour-belt student may hold adjacent belts but pay different fees; tier drives billing, belt drives progression
+- `current_belt` tracks present level only — historical belt progression will live in `SkillRecord` (skills app, Phase 6)
+- `member_id` is `CharField`, not `AutoField` — club-assigned in the form "ADV-YYYY-NNN"; admin staff enter it manually
+- `MemberProfile.is_active` is a `@property` shadowing the status check — not a separate DB column — to avoid sync bugs between `status` and a boolean field
+- `on_delete=PROTECT` on `primary_dojo` — member record survives dojo closure; FK must be re-assigned before deleting a dojo
+- `on_delete=CASCADE` on `MemberDojoEnrollment.member` — enrollment rows are owned by the profile and deleted with it
+- No FK to events/skills/fees yet — members stays upstream in the dependency chain as per project constraint
+
+**Prevention / Notes:**
+
+- `UniqueConstraint` on `(member, dojo)` is DB-level; Django admin raises a friendly `ValidationError` before it hits the DB, but raw ORM inserts will raise `IntegrityError` — integration tests should test both paths
+- `age` property has correct birthday-not-yet-reached logic: subtracts 1 if today's (month, day) is before the birthday tuple
+
+---
+
 ### [2026-06-22] — dojos App: DojoEntity & DojoStaff Models
 
 **Status:** Resolved **Severity:** N/A **App / Module:** dojos **Environment:** Dev
