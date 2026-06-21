@@ -80,7 +80,7 @@ No PayMe Business SDK integration.
 
 ---
 
-### \[2025-06-22\] — Project Initialised
+### [2026-06-22] — Project Initialised
 
 **Status:** Resolved **Severity:** N/A **App / Module:** Project setup **Environment:** Dev
 
@@ -92,10 +92,12 @@ No PayMe Business SDK integration.
 
 - Django project scaffolded at `R:\My Drive\Work\Taekwondo\Coding\CRM DEV\ADV_Web_Project`  
 - Settings split into `config/settings/base.py`, `dev.py`, `prod.py`  
-- All 11 Django apps created as skeletons under `apps/`  
+- All 12 Django apps created as skeletons under `apps/` (accounts, members, dojos, events, activities, skills, fees, payments, communications, cms, matches, chatbot)  
+- `config/celery.py` added for Celery + Redis async task queue  
 - `README.md` and `DEBUGLOG.md` created  
-- `.gitignore` and `.env.example` created  
-- Git repository initialised, initial commit pushed to GitHub
+- `.gitignore`, `.env.example`, `requirements/` created  
+- `.github/workflows/ci.yml` placeholder created  
+- Git repository initialised — commit hash: _TBD_
 
 **Prevention / Notes:**
 

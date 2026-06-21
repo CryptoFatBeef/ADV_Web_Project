@@ -111,7 +111,7 @@ ADV_Web_Project/
 ### 1\. Clone the Repository
 
 ```shell
-git clone https://github.com/<your-org>/ADV_Web_Project.git
+git clone https://github.com/YOUR_ORG/ADV_Web_Project.git
 cd ADV_Web_Project
 ```
 
@@ -248,5 +248,5 @@ Refer to `docs/deployment_guide.md` (TBD) for full production setup steps.
 
 | Version | Date | Notes |
 | :---- | :---- | :---- |
-| 0.1.0 | TBD | Project initialised |
+| 0.1.0 | 2026-06-22 | Project initialised — Django scaffold, 12 app skeletons, settings split, Celery/Redis, CI workflow |
 

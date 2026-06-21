@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-check:
+    name: Lint & Migration Check
+    runs-on: ubuntu-latest
+
+    env:
+      DJANGO_SECRET_KEY: ci-insecure-key-not-used-in-production
+      DJANGO_DEBUG: "True"
+      DJANGO_ALLOWED_HOSTS: "localhost"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -r requirements/dev.txt
+
+      - name: Lint (flake8)
+        run: flake8 apps/ config/ --max-line-length=120 --exclude=migrations
+
+      - name: Django system check
+        run: python manage.py check --settings=config.settings.dev
+
+      - name: Run migrations
+        run: python manage.py migrate --settings=config.settings.dev

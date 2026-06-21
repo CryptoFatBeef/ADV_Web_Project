@@ -18,7 +18,10 @@ Thumbs.db
 *.csv
 .zip
 .claude/
+.vscode/
 docs/*
 prompts/*
+private_media/*
+!private_media/.gitkeep
 # Migration output — production data, do not commit
 Coding/tools/migration/output/
