@@ -53,6 +53,32 @@ Any related docs, Stack Overflow links, or Django docs sections worth bookmarkin
 
 ---
 
+### [2026-06-22] — accounts App: CustomUser Model & First Migration
+
+**Status:** Resolved **Severity:** N/A **App / Module:** accounts **Environment:** Dev
+
+**Symptom:** N/A — planned build step.
+
+**Root Cause:** N/A
+
+**Fix Applied:**
+
+- `apps/accounts/models.py`: Created `User(AbstractUser)` with `role` (TextChoices: GRANDMASTER / DEPUTY_GRANDMASTER / ADMIN / EDITOR / COACH / MEMBER / PARENT, default MEMBER), `phone` (CharField, blank=True), `avatar` (ImageField, upload_to='avatars/', blank=True)
+- `apps/accounts/admin.py`: Registered `CustomUser` with `UserAdmin`, extended fieldsets to expose `role`, `phone`, `avatar`; `list_display` includes `username`, `email`, `role`, `is_staff`, `is_active`
+- `apps/accounts/migrations/0001_initial.py`: Generated and applied — all 19 migrations green
+- `.env` created from `.env.example` with generated `DJANGO_SECRET_KEY` for dev (was missing — blocked `manage.py`)
+
+**Decisions:**
+- `Role` defined as inner `TextChoices` class on `User` — keeps choices co-located with the model, avoids a separate constants file at this stage
+- No FK to other apps — accounts has zero cross-app dependencies as required
+- No RBAC logic added — role field only; permission logic deferred to a later session
+
+**Prevention / Notes:**
+- `.env` must exist before any `manage.py` command; `python-decouple` raises `UndefinedValueError` otherwise
+- Always run `makemigrations accounts` before `migrate` so custom user table is created before `django.contrib.admin` tables (which FK to `AUTH_USER_MODEL`)
+
+---
+
 ### [2026-06-22] — Architecture Decision: PayMe / FPS Payment Flow
 
 **Status:** Resolved **Severity:** N/A **App / Module:** payments **Environment:** Dev
