@@ -1,0 +1,24 @@
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.pyc
+db.sqlite3
+db.sqlite3-shm
+db.sqlite3-wal
+staticfiles/
+media/
+.env
+*.log
+.DS_Store
+Thumbs.db
+*.code-workspace
+*.gsheet
+*.gdoc
+*.csv
+.zip
+.claude/
+docs/*
+prompts/*
+# Migration output — production data, do not commit
+Coding/tools/migration/output/
