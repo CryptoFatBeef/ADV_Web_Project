@@ -97,7 +97,7 @@ No PayMe Business SDK integration.
 - `README.md` and `DEBUGLOG.md` created  
 - `.gitignore`, `.env.example`, `requirements/` created  
 - `.github/workflows/ci.yml` placeholder created  
-- Git repository initialised — commit hash: _TBD_
+- Git repository initialised — commit hash: `998068678911bad01f4843f74573ed11cb5c96b0`
 
 **Prevention / Notes:**
 
