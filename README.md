@@ -111,7 +111,7 @@ ADV_Web_Project/
 ### 1\. Clone the Repository
 
 ```shell
-git clone https://github.com/YOUR_ORG/ADV_Web_Project.git
+git clone https://github.com/CryptoFatBeef/ADV_Web_Project.git
 cd ADV_Web_Project
 ```
 
