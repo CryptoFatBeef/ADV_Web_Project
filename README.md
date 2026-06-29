@@ -248,5 +248,6 @@ Refer to `docs/deployment_guide.md` (TBD) for full production setup steps.
 
 | Version | Date | Notes |
 | :---- | :---- | :---- |
+| 0.2.0 | 2026-06-29 | Data layer complete — all 12 apps scaffolded (models, admin, migrations) |
 | 0.1.0 | 2026-06-22 | Project initialised — Django scaffold, 12 app skeletons, settings split, Celery/Redis, CI workflow |
 

@@ -102,7 +102,16 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'Asia/Hong_Kong'
-CELERY_BEAT_SCHEDULE = {}  # Populated per-feature as tasks are implemented
+CELERY_BEAT_SCHEDULE = {
+    'reconcile-fps-payments-every-15-min': {
+        'task': 'apps.payments.tasks.reconcile_fps_payments',
+        'schedule': 900.0,  # seconds
+    },
+    'dispatch-pending-notifications-every-5-min': {
+        'task': 'apps.communications.tasks.dispatch_pending_notifications',
+        'schedule': 300.0,
+    },
+}
 
 # ----- Stripe -----
 STRIPE_PUBLIC_KEY = config('STRIPE_PUBLIC_KEY', default='')
@@ -113,8 +122,10 @@ STRIPE_WEBHOOK_SECRET = config('STRIPE_WEBHOOK_SECRET', default='')
 PAYME_MERCHANT_ID = config('PAYME_MERCHANT_ID', default='')
 PAYME_API_KEY = config('PAYME_API_KEY', default='')
 
-# ----- Claude API -----
-ANTHROPIC_API_KEY = config('ANTHROPIC_API_KEY', default='')
+# ----- OpenRouter (Chatbot) -----
+OPENROUTER_API_KEY  = config('OPENROUTER_API_KEY',  default='')
+OPENROUTER_BASE_URL = config('OPENROUTER_BASE_URL', default='https://openrouter.ai/api/v1')
+OPENROUTER_MODEL    = config('OPENROUTER_MODEL',    default='anthropic/claude-sonnet-4-6')
 
 # ----- WhatsApp Business API -----
 WHATSAPP_API_TOKEN = config('WHATSAPP_API_TOKEN', default='')
