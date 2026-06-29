@@ -53,6 +53,25 @@ Any related docs, Stack Overflow links, or Django docs sections worth bookmarkin
 
 ---
 
+### [2026-06-29] — Project: v0.2.0 Commit Checkpoint
+
+**Status:** Resolved **Severity:** N/A **App / Module:** Project **Environment:** Dev
+
+**Symptom:** N/A — scheduled commit checkpoint.
+
+**Root Cause:** N/A
+
+**Fix Applied:**
+- Committed v0.2.0 data layer (9 apps: activities, skills, fees, payments, communications, cms, matches, chatbot, events)
+- Commit hash: `56e744ea9fb8f2726a097529285666a93c8e5ead`
+- Files changed: 37 files, 2111 insertions(+), 6 deletions(-)
+
+**Prevention / Notes:**
+- Next milestone: v0.3.0 frontend views + URL routing
+- Versioning standard: 0.1.x = scaffold, 0.2.x = data layer, 0.3.x = frontend, 1.0.0 = production deploy
+
+---
+
 ### [2026-06-29] — chatbot App: FAQEntry, ChatSession & ChatMessage Models, OpenRouter Service & Admin
 
 **Status:** Resolved **Severity:** N/A **App / Module:** chatbot **Environment:** Dev
