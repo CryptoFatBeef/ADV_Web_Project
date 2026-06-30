@@ -53,6 +53,181 @@ Any related docs, Stack Overflow links, or Django docs sections worth bookmarkin
 
 ---
 
+### [2026-06-30] — accounts App: Login Page Leaked CRM Sidebar to Logged-Out Visitors
+
+**Status:** Resolved
+**Severity:** Medium
+**App / Module:** accounts, templates
+**Environment:** Dev
+
+**Symptom:**
+`templates/accounts/login.html` extended `base.html` (the authenticated CRM shell). Verified
+via `grep -i sidebar` on rendered HTML output — a logged-out visitor hitting the login page saw
+the full CRM sidebar markup (nav items gated by `{% has_role %}` correctly returned empty for
+an anonymous user, but the sidebar container itself, "All authenticated" nav items like
+Dashboard/Events/Activities/Matches/Chatbot, and the overall CRM shell structure rendered
+unconditionally). Same bug class as the root `/` → DashboardView issue that prompted v0.3.1,
+but on a different template, not caught during the original v0.3.0 review.
+
+**Root Cause:**
+`base.html` was designed under the assumption it would only ever be rendered for authenticated
+users (access enforced via `LoginRequiredMixin` at the view layer). `LoginView` is, by
+necessity, accessible to logged-out users — so any template extending `base.html` for the login
+page inherently breaks that assumption. The 403/404 error pages had the identical problem for
+the same reason.
+
+**Fix Applied:**
+- `templates/accounts/login.html` re-based to extend `templates/public/base_public.html`
+  instead of `base.html`.
+- `templates/403.html` and `templates/404.html` also re-based to `base_public.html` (discovered
+  during the same audit — see v0.3.1 entry below for full context), with the back-link made
+  conditional: authenticated users get "Back to Dashboard", logged-out get "Back to Home".
+- Post-fix audit: `grep -r 'extends "base.html"' templates/` returns zero hits outside
+  authenticated-only template directories.
+
+**Prevention / Notes:**
+- Standing rule going forward: any template reachable by a logged-out user must never extend
+  `base.html`. `base.html` is reserved exclusively for views wrapped in `LoginRequiredMixin`.
+- Add this check to the pre-merge checklist for any future template work: if a new view is NOT
+  behind `LoginRequiredMixin`, manually confirm its template extends `base_public.html`.
+- This bug class (CRM shell leaking to public pages) was the entire motivation for the v0.3.1
+  milestone — see that entry for full architectural context.
+
+---
+
+### [2026-06-30] — Public Website Split: apps.public, apps.enrollment, SEO Foundation
+
+**Status:** Resolved
+**Severity:** N/A
+**App / Module:** public (new), enrollment (new), accounts, cms, dojos, members
+**Environment:** Dev
+
+**Symptom:** N/A — architectural correction. v0.3.0 routed `/` directly to the authenticated
+`DashboardView`, meaning prospective members, parents, and search engine crawlers hit a login
+wall instead of a public-facing site. Discovered post-v0.3.0 ship during manual review, not
+during the original build.
+
+**Root Cause:** The v0.3.0 milestone brief never separated "public marketing site" from "CRM
+shell" as distinct concerns — both were assumed to live under the same `base.html` /
+`/` root. No public-facing requirement had been scoped into that milestone.
+
+**Fix Applied:**
+- Routing: `/` now serves `apps.public.views.HomeView` (no auth). CRM root moved to
+  `/accounts/dashboard/`. `LOGIN_URL`, `LOGIN_REDIRECT_URL`, `LOGOUT_REDIRECT_URL` updated in
+  `config/settings/base.py` accordingly.
+- New public-only URL prefixes: `/about/`, `/instructors/`, `/our-dojos/` (and
+  `/our-dojos/<slug>/`), `/news/` (and `/news/<slug>/`), `/showcase/`, `/enroll/`, `/robots.txt`.
+  CRM `/dojos/` and `/members/` are untouched and remain role-gated — `/our-dojos/` was chosen
+  as a distinct prefix specifically to avoid URL-prefix collision with the CRM's `/dojos/`,
+  which would otherwise complicate `robots.txt` rules and routing logic.
+- New app `apps.public` — views + templates only, no models. Reads `DojoEntity` (dojos),
+  `NewsPost` (cms, new model), `DojoStaff` (dojos, extended with public bio fields), and
+  `MemberProfile` (members, filtered to black-belt tiers + explicit consent) to render public
+  pages.
+- New app `apps.enrollment` — `EnrollmentLead` model for public lead capture. Includes a
+  mandatory `consent_pdpo` boolean field (Hong Kong Personal Data (Privacy) Ordinance requires
+  explicit consent for public personal-data collection forms), enforced at both form and model
+  level, with the privacy notice displayed inline on the form page (not just linked).
+- New template tree: `templates/base_public.html` — simple top navbar, no sidebar, structurally
+  incapable of leaking CRM nav structure. Used by every public-facing template, including
+  `accounts/login.html`, `403.html`, and `404.html` (see separate entry above for that specific
+  leak fix).
+- New fields: `DojoStaff.bio_zh`, `bio_en`, `photo`, `certifications` (JSONField), `is_public`,
+  `slug`, `display_order` — public instructor bios sourced from real Blueprint V0.7.1 content
+  (黎銳金, 陳景年, 高民, 鄭偉雄, 鄔竣傑, 馮家輝 credentials), not placeholder text.
+  `MemberProfile.public_showcase_consent` (boolean, default False) — staff-set only via the
+  existing `MemberUpdateView` (already role-gated to admin roles); no parent self-service
+  consent model built this milestone (see Key Decisions).
+- SEO foundation: `robots.txt` (allows public paths, disallows all CRM/admin paths), JSON-LD
+  `SportsOrganization`/`SportsActivityLocation` structured data, Open Graph meta tags, bilingual
+  (繁中/English) page titles and meta descriptions targeting real search terms
+  ("香港跆拳道班", "Taekwondo Hong Kong", district-specific dojo terms).
+- `SITE_DOMAIN`, `SITE_FACEBOOK_URL`, `SITE_INSTAGRAM_URL` added as env-configurable settings
+  (all default to empty/placeholder — no domain or social handles were finalized at build time,
+  see Key Decisions) exposed to all templates via a new context processor
+  (`apps.public.context_processors.site_settings`).
+
+**Key Decisions:**
+- **Parent consent deferred:** building a full parent-authority model (which `Parent` account
+  can consent for which specific `Member`) was scoped out of this milestone — the codebase has
+  no `Parent`↔`Member` relationship model at all (`User.role='PARENT'` is just a role tag, no
+  linkage). `public_showcase_consent` is staff-set only for now. A proper `MemberGuardian`
+  model with self-service parent consent is deferred to v0.4.0+, pending a decision on legal
+  guardianship vs. enrollment-contact semantics (relevant for divorced parents / foster
+  guardianship cases) — do not build this without that decision made first.
+- **Domain and social handles not finalized:** rather than hardcode `www.advancedtkd.net` (only
+  referenced in an old marketing PDF, not confirmed as the production domain) or fabricate
+  Facebook/Instagram URLs, both are env-var-driven and empty by default. JSON-LD and footer
+  social links are `{% if %}`-gated and simply omitted until real values are confirmed and set.
+- **`/our-dojos/` and `/showcase/` as distinct prefixes from `/dojos/` and `/members/`:** chosen
+  specifically so CRM and public routes never share a path prefix — keeps `robots.txt`
+  unambiguous and avoids any risk of a public view accidentally being reachable under a
+  CRM-protected prefix or vice versa.
+- **`apps.public` carries no models of its own** — deliberately thin, only views/templates,
+  reading data owned by `dojos`/`cms`/`members`. Avoids duplicating relationships that already
+  exist elsewhere.
+
+**Prevention / Notes:**
+- Not yet built (tracked as follow-up, not blocking): `sitemap.xml` via
+  `django.contrib.sitemaps`; Editor-role CRUD views for `NewsPost` under `/cms/` (only the
+  public read-only views exist so far — Editors currently need Django admin to publish news).
+- Showcase listing (`/showcase/`) must only ever query name/belt/dojo — verify any future
+  changes to `ShowcaseListView` don't accidentally select contact info, attendance, fees, or
+  exam data.
+- Any new public-facing view must use `apps.public` or extend `base_public.html` directly —
+  never reuse `base.html`.
+
+---
+
+### [2026-06-29] — Project: v0.3.0 Frontend Layer Complete (Retroactive Entry)
+
+**Status:** Resolved
+**Severity:** N/A
+**App / Module:** accounts, all 12 apps (views/urls/templates)
+**Environment:** Dev
+
+**Symptom:** N/A — scheduled milestone, logged retroactively (this entry was missed at the time
+v0.3.0 shipped; added during the v0.3.1 documentation catch-up pass).
+
+**Root Cause:** N/A
+
+**Fix Applied:**
+- `apps/accounts/templatetags/rbac_tags.py` — custom `{% has_role %}` / `{% end_has_role %}`
+  block tag; all role-based nav visibility logic lives here, never as inline `{% if %}` role
+  comparisons in templates.
+- `apps/accounts/mixins.py` — `RoleRequiredMixin(AccessMixin)`: unauthenticated users hit
+  `handle_no_permission()` (login redirect); authenticated users with the wrong role hit
+  `raise PermissionDenied` (403), not a redirect — these are distinct states and must not be
+  conflated.
+- `templates/base.html` — full two-column sidebar layout (fixed 240px desktop sidebar,
+  collapsing hamburger nav on mobile), role-gated nav links via `{% has_role %}`.
+- `static/css/main.css` — design tokens (`--color-primary`, `--color-accent`,
+  `--color-sidebar-bg`, etc.), sidebar/navbar styling, Noto Sans TC for Chinese character
+  support.
+- All 12 apps: CBVs following `LoginRequiredMixin` → `RoleRequiredMixin` → Django generic view
+  pattern; Phase 1 URL patterns wired in each app's `urls.py`, included from `config/urls.py`.
+- Role-scoped `DashboardView`: Grandmaster/Deputy GM/Admin see global aggregates; Coach sees
+  only their own dojo's members/events via `DojoStaff` filtering; Member/Parent see only their
+  own data.
+- `templates/403.html`, `templates/404.html` created.
+
+**Key Decisions:**
+- CMS URL pattern uses `<int:pk>/edit/` instead of the originally planned `<slug:slug>/edit/`
+  — `ContentBlock` has no slug field; the slug-based route would have raised `FieldError` at
+  runtime. Caught during Claude Code's plan review before execution.
+- CBV-only convention for all Phase 1 views — no function-based views, for consistency.
+
+**Prevention / Notes:**
+- v0.3.0 routed `/` directly to the authenticated `DashboardView` with no public-facing
+  alternative — this was corrected in v0.3.1 (see entry above). Flagging here for historical
+  accuracy: the gap existed from this milestone onward until the v0.3.1 fix.
+- v0.3.1 refactor candidate identified but not yet done: duplicate nav-link HTML between the
+  desktop sidebar and mobile hamburger collapse — extract into
+  `templates/partials/nav_links.html` and `{% include %}` from both, so future nav changes
+  don't require editing two places.
+
+---
+
 ### [2026-06-29] — Project: v0.2.0 Commit Checkpoint
 
 **Status:** Resolved **Severity:** N/A **App / Module:** Project **Environment:** Dev

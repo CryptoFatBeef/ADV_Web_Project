@@ -9,6 +9,7 @@ Production-grade Club Management System for Advanced Taekwondo Club (技擊跆�
 - [Project Overview](#project-overview)  
 - [Tech Stack](#tech-stack)  
 - [Architecture](#architecture)  
+- [URL Structure](#url-structure)  
 - [Local Development Setup](#local-development-setup)  
 - [Environment Variables Reference](#environment-variables-reference)  
 - [Django Apps](#django-apps)  
@@ -31,7 +32,8 @@ A comprehensive CRM and public website management system built for 技擊跆拳�
 | Fees & Invoicing | Annual membership fees, WeasyPrint PDF invoices, payment tracking |
 | Payments | Stripe (international) \+ PayMe (HK local) dual gateway |
 | Communications | In-app notifications, email, WhatsApp |
-| Public Website CMS | Content management for the club's public-facing pages |
+| Public Website | Public-facing marketing site — homepage, about, instructor bios, dojo info, news, black belt showcase, enrollment leads (no login required) |
+| Public Website CMS | Editor-managed content (news posts, static content blocks) backing the public site |
 | Match Management | Tournament and match result tracking |
 | Chatbot | Phase 1 FAQ bot via Claude API \+ n8n |
 | RBAC | Role-based access control across all modules |
@@ -97,6 +99,49 @@ ADV_Web_Project/
 ├── README.md
 └── DEBUGLOG.md
 ```
+
+---
+
+## URL Structure
+
+### Public (no login required)
+
+| URL | Purpose |
+| :---- | :---- |
+| `/` | Homepage |
+| `/about/` | About the club |
+| `/instructors/` | Coach/instructor bios |
+| `/our-dojos/` | Dojo list |
+| `/our-dojos/<slug>/` | Dojo detail (address, schedule, social links) |
+| `/news/` | News & announcements |
+| `/news/<slug>/` | News post detail |
+| `/showcase/` | Black belt member showcase |
+| `/enroll/` | Enrollment lead form |
+| `/robots.txt` | SEO crawler directives |
+
+### Authenticated (CRM — requires login + role)
+
+| URL | Purpose |
+| :---- | :---- |
+| `/accounts/login/` | Login |
+| `/accounts/logout/` | Logout |
+| `/accounts/dashboard/` | CRM dashboard (role-scoped) |
+| `/accounts/profile/` | Own profile |
+| `/members/` | Member management |
+| `/dojos/` | Dojo management |
+| `/events/` | Events |
+| `/activities/` | Activities / exams |
+| `/skills/` | Skills records |
+| `/fees/` | Fees |
+| `/payments/` | Payments |
+| `/communications/` | Communications |
+| `/cms/` | CMS management |
+| `/matches/` | Matches |
+| `/chatbot/` | Chatbot |
+
+**Note:** `/our-dojos/` (public) and `/dojos/` (CRM) are intentionally separate URL prefixes —
+this keeps `robots.txt` rules unambiguous and avoids any routing overlap between public and
+authenticated views. Same reasoning applies to `/showcase/` (public) vs. `/members/` (CRM).
 
 ---
 
@@ -185,6 +230,9 @@ Copy `.env.example` to `.env` and fill in all values. **Never commit `.env` to G
 | `WHATSAPP_API_TOKEN` | ✅ | WhatsApp Business API token | `xxxxx` |
 | `WHATSAPP_PHONE_NUMBER_ID` | ✅ | WhatsApp phone number ID | `xxxxx` |
 | `CLOUDFLARE_TUNNEL_TOKEN` | Prod only | Cloudflare Tunnel token | `xxxxx` |
+| `SITE_DOMAIN` | Recommended | Production domain, used in JSON-LD structured data, sitemap, and robots.txt | `www.example.com` |
+| `SITE_FACEBOOK_URL` | Optional | Club Facebook page URL — omitted from footer/schema if blank | `https://facebook.com/...` |
+| `SITE_INSTAGRAM_URL` | Optional | Club Instagram page URL — omitted from footer/schema if blank | `https://instagram.com/...` |
 
 ---
 
@@ -200,9 +248,11 @@ Copy `.env.example` to `.env` and fill in all values. **Never commit `.env` to G
 | `fees` | Annual fee setup, invoice generation (WeasyPrint) |
 | `payments` | Stripe \+ PayMe integration, payment records, webhook handlers |
 | `communications` | Notification hub — in-app, email, WhatsApp dispatch |
-| `cms` | Public website content blocks, news, announcements |
+| `cms` | Public website content blocks, news (`NewsPost`), announcements |
 | `matches` | Tournament brackets, match results, competitor records |
 | `chatbot` | FAQ entries, chatbot config, Claude API \+ n8n webhook bridge |
+| `public` | Public-facing marketing site — no models of its own; reads data from `dojos`, `cms`, `members` to render homepage, about, instructor bios, dojo listings, news, and black belt showcase |
+| `enrollment` | Public enrollment lead capture (`EnrollmentLead` model with mandatory PDPO consent field) — no login required |
 
 ---
 
@@ -248,6 +298,8 @@ Refer to `docs/deployment_guide.md` (TBD) for full production setup steps.
 
 | Version | Date | Notes |
 | :---- | :---- | :---- |
+| 0.3.1 | 2026-06-30 | Public website split — `/` now serves a public homepage; CRM moved to `/accounts/dashboard/`. New `public` and `enrollment` apps. SEO foundation (robots.txt, JSON-LD, OG tags). Fixed a CRM-shell leak on the login/403/404 pages. |
+| 0.3.0 | 2026-06-29 | Frontend layer complete — RBAC template tags, role-scoped dashboard, sidebar shell, all 12 apps' views/URLs/templates wired |
 | 0.2.0 | 2026-06-29 | Data layer complete — all 12 apps scaffolded (models, admin, migrations) |
 | 0.1.0 | 2026-06-22 | Project initialised — Django scaffold, 12 app skeletons, settings split, Celery/Redis, CI workflow |
 
