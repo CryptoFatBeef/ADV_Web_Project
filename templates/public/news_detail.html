@@ -1,0 +1,13 @@
+{% extends "public/base_public.html" %}
+
+{% block title %}{{ post.title }} | 技擊跆拳道會{% endblock %}
+{% block meta_description %}{{ post.excerpt }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h1>{{ post.title }}</h1>
+    <p class="text-muted small">{{ post.published_at|date:"Y-m-d" }}</p>
+    {% if post.cover_image %}<img src="{{ post.cover_image.url }}" class="img-fluid mb-3" alt="{{ post.title }}">{% endif %}
+    <div>{{ post.body|linebreaks }}</div>
+</div>
+{% endblock %}

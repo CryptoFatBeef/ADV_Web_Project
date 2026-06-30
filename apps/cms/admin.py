@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils import timezone
 
-from .models import Announcement, ContentBlock
+from .models import Announcement, ContentBlock, NewsPost
 
 
 @admin.register(ContentBlock)
@@ -43,3 +43,20 @@ class AnnouncementAdmin(admin.ModelAdmin):
             status='PUBLISHED', published_at=timezone.now()
         )
         self.message_user(request, f'{count} announcement(s) published.')
+
+
+@admin.register(NewsPost)
+class NewsPostAdmin(admin.ModelAdmin):
+    list_display    = ('title', 'status', 'published_at', 'created_by')
+    list_filter     = ('status',)
+    search_fields   = ('title', 'excerpt')
+    prepopulated_fields = {'slug': ('title',)}
+    readonly_fields = ('created_at', 'updated_at')
+    actions         = ['action_publish']
+
+    @admin.action(description='Publish selected news posts')
+    def action_publish(self, request, queryset):
+        count = queryset.exclude(status='PUBLISHED').update(
+            status='PUBLISHED', published_at=timezone.now()
+        )
+        self.message_user(request, f'{count} news post(s) published.')

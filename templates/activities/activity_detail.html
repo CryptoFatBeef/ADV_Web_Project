@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}{{ activity.template }} — 技擊跆拳道會 CRM{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-4">{{ activity.template }}</h1>
+<dl class="row">
+    <dt class="col-sm-3">Scheduled Date</dt>
+    <dd class="col-sm-9">{{ activity.scheduled_date }}</dd>
+    <dt class="col-sm-3">Dojo</dt>
+    <dd class="col-sm-9">{{ activity.dojo }}</dd>
+    <dt class="col-sm-3">Event</dt>
+    <dd class="col-sm-9">{{ activity.event }}</dd>
+    <dt class="col-sm-3">Notes</dt>
+    <dd class="col-sm-9">{{ activity.notes }}</dd>
+</dl>
+{% endblock %}

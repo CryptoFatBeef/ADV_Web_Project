@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}{{ dojo.name }} — 技擊跆拳道會 CRM{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-4">{{ dojo.name }}</h1>
+<dl class="row">
+    <dt class="col-sm-3">District</dt>
+    <dd class="col-sm-9">{{ dojo.get_district_display }}</dd>
+    <dt class="col-sm-3">Address</dt>
+    <dd class="col-sm-9">{{ dojo.address }}</dd>
+    <dt class="col-sm-3">Phone</dt>
+    <dd class="col-sm-9">{{ dojo.phone }}</dd>
+</dl>
+{% endblock %}

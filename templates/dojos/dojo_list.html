@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Dojos — 技擊跆拳道會 CRM{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-4">Dojos</h1>
+<table class="table table-striped">
+    <thead><tr><th>Name</th><th>District</th><th>Phone</th></tr></thead>
+    <tbody>
+    {% for dojo in dojos %}
+        <tr>
+            <td><a href="{% url 'dojos:dojo_detail' dojo.slug %}">{{ dojo.name }}</a></td>
+            <td>{{ dojo.get_district_display }}</td>
+            <td>{{ dojo.phone }}</td>
+        </tr>
+    {% empty %}
+        <tr><td colspan="3" class="text-muted">No dojos found.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

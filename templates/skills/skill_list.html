@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Skills Records — 技擊跆拳道會 CRM{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-4">Skills Records</h1>
+<table class="table table-striped">
+    <thead><tr><th>Member</th><th>Skill</th><th>Category</th><th>Result</th><th>Assessed</th></tr></thead>
+    <tbody>
+    {% for skill in skills %}
+        <tr>
+            <td>{{ skill.member }}</td>
+            <td>{{ skill.skill_name }}</td>
+            <td>{{ skill.get_category_display }}</td>
+            <td>{{ skill.get_result_display }}</td>
+            <td>{{ skill.assessed_at }}</td>
+        </tr>
+    {% empty %}
+        <tr><td colspan="5" class="text-muted">No skills records found.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

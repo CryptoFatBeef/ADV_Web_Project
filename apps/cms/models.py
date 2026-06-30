@@ -72,3 +72,26 @@ class Announcement(models.Model):
         if self.expires_at and now > self.expires_at:
             return False
         return True
+
+
+class NewsPost(models.Model):
+    title        = models.CharField(max_length=200)
+    slug         = models.SlugField(unique=True)
+    status       = models.CharField(max_length=20, choices=ContentStatus.choices, default=ContentStatus.DRAFT)
+    excerpt      = models.CharField(max_length=300, blank=True)
+    body         = models.TextField()
+    cover_image  = models.ImageField(upload_to='news/', blank=True)
+    published_at = models.DateTimeField(null=True, blank=True)
+    created_by   = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name='news_posts',
+    )
+    created_at   = models.DateTimeField(auto_now_add=True)
+    updated_at   = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-published_at']
+
+    def __str__(self):
+        return self.title

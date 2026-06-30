@@ -1,0 +1,29 @@
+/* ADV_Web_Project — public site stylesheet (layered on top of main.css) */
+
+.public-navbar .navbar-brand {
+  color: var(--color-primary);
+}
+
+.public-navbar .nav-link {
+  color: var(--color-primary);
+}
+
+.public-navbar .nav-link:hover {
+  color: var(--color-accent);
+}
+
+main {
+  min-height: 60vh;
+}
+
+.hero {
+  background-color: var(--color-primary);
+  color: #fff;
+  padding: 4rem 0;
+}
+
+.belt-card {
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 1rem;
+}

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Activities / Exams — 技擊跆拳道會 CRM{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-4">Activities / Exams</h1>
+<table class="table table-striped">
+    <thead><tr><th>Template</th><th>Scheduled Date</th><th>Dojo</th></tr></thead>
+    <tbody>
+    {% for activity in activities %}
+        <tr>
+            <td><a href="{% url 'activities:activity_detail' activity.pk %}">{{ activity.template }}</a></td>
+            <td>{{ activity.scheduled_date }}</td>
+            <td>{{ activity.dojo }}</td>
+        </tr>
+    {% empty %}
+        <tr><td colspan="3" class="text-muted">No activities found.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

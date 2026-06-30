@@ -64,6 +64,10 @@ class MemberProfile(models.Model):
     )
     joined_date = models.DateField()
     notes = models.TextField(blank=True)
+    public_showcase_consent = models.BooleanField(
+        default=False,
+        help_text='Staff-set only: permission to feature this member (name, belt, dojo) on the public website.',
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

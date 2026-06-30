@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% load rbac_tags %}
+
+{% block title %}{{ member.member_id }} — 技擊跆拳道會 CRM{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-4">{{ member.user.get_full_name|default:member.user.username }}</h1>
+<dl class="row">
+    <dt class="col-sm-3">Member ID</dt>
+    <dd class="col-sm-9">{{ member.member_id }}</dd>
+    <dt class="col-sm-3">Belt</dt>
+    <dd class="col-sm-9">{{ member.get_current_belt_display }}</dd>
+    <dt class="col-sm-3">Tier</dt>
+    <dd class="col-sm-9">{{ member.get_tier_display }}</dd>
+    <dt class="col-sm-3">Status</dt>
+    <dd class="col-sm-9">{{ member.get_status_display }}</dd>
+    <dt class="col-sm-3">Primary Dojo</dt>
+    <dd class="col-sm-9">{{ member.primary_dojo }}</dd>
+    <dt class="col-sm-3">Joined</dt>
+    <dd class="col-sm-9">{{ member.joined_date }}</dd>
+</dl>
+
+{% has_role request.user 'GRANDMASTER' 'DEPUTY_GRANDMASTER' 'ADMIN' %}
+<a class="btn btn-primary" href="{% url 'members:member_edit' member.pk %}">Edit</a>
+{% end_has_role %}
+{% endblock %}

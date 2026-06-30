@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% load rbac_tags %}
+
+{% block title %}Dashboard — 技擊跆拳道會 CRM{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-4">Dashboard</h1>
+
+<div class="row g-3 mb-4">
+    {% has_role request.user 'GRANDMASTER' 'DEPUTY_GRANDMASTER' 'ADMIN' %}
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <div class="text-muted small">Total Active Members</div>
+                <div class="fs-2 fw-bold">{{ total_members }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <div class="text-muted small">Pending Fees</div>
+                <div class="fs-2 fw-bold">{{ pending_fees }}</div>
+            </div>
+        </div>
+    </div>
+    {% end_has_role %}
+
+    {% has_role request.user 'COACH' %}
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <div class="text-muted small">My Dojo's Active Members</div>
+                <div class="fs-2 fw-bold">{{ total_members }}</div>
+            </div>
+        </div>
+    </div>
+    {% end_has_role %}
+
+    {% has_role request.user 'MEMBER' 'PARENT' 'EDITOR' %}
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <div class="text-muted small">My Attendance Count</div>
+                <div class="fs-2 fw-bold">{{ my_attendance }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <div class="text-muted small">My Pending Fees</div>
+                <div class="fs-2 fw-bold">{{ my_pending_fees }}</div>
+            </div>
+        </div>
+    </div>
+    {% end_has_role %}
+</div>
+
+<h2 class="h5 mb-3">Upcoming Events</h2>
+<table class="table table-sm">
+    <thead><tr><th>Title</th><th>Start</th></tr></thead>
+    <tbody>
+    {% for event in upcoming_events|default:my_upcoming_events %}
+        <tr>
+            <td><a href="{% url 'events:event_detail' event.pk %}">{{ event.title }}</a></td>
+            <td>{{ event.start_datetime }}</td>
+        </tr>
+    {% empty %}
+        <tr><td colspan="2" class="text-muted">No upcoming events.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<div class="mt-4">
+    {% has_role request.user 'GRANDMASTER' 'DEPUTY_GRANDMASTER' 'ADMIN' %}
+    <a class="btn btn-primary me-2" href="{% url 'members:member_list' %}">Add Member</a>
+    <a class="btn btn-outline-primary" href="{% url 'events:event_create' %}">Create Event</a>
+    {% end_has_role %}
+</div>
+{% endblock %}

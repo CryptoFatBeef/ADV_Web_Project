@@ -1,0 +1,44 @@
+{% extends "public/base_public.html" %}
+
+{% block title %}技擊跆拳道會 | 香港跆拳道班 Taekwondo Hong Kong | 葵涌跆拳道道場{% endblock %}
+{% block meta_description %}技擊跆拳道會提供兒童跆拳道、成人跆拳道及黑帶考試訓練班，葵涌總館及全港多區道場，三十年教學經驗。{% endblock %}
+
+{% block content %}
+<section class="hero text-center">
+    <div class="container">
+        <h1 class="display-5 fw-bold">技擊跆拳道會</h1>
+        <p class="lead">Advanced Taekwondo Club — 香港跆拳道班</p>
+        <a class="btn btn-lg btn-primary mt-3" href="{% url 'enrollment:lead_create' %}">立即報名</a>
+    </div>
+</section>
+
+<div class="container py-5">
+    <h2 class="mb-4">道場資訊</h2>
+    <div class="row g-3">
+        {% for dojo in featured_dojos %}
+        <div class="col-md-3">
+            <div class="belt-card h-100">
+                <h5>{{ dojo.name }}</h5>
+                <p class="text-muted small">{{ dojo.get_district_display }}</p>
+                <a href="{% url 'public:dojo_detail' dojo.slug %}">了解更多</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <h2 class="mt-5 mb-4">最新消息</h2>
+    <div class="row g-3">
+        {% for post in latest_news %}
+        <div class="col-md-4">
+            <div class="belt-card h-100">
+                <h5>{{ post.title }}</h5>
+                <p class="text-muted small">{{ post.published_at|date:"Y-m-d" }}</p>
+                <a href="{% url 'public:news_detail' post.slug %}">閱讀更多</a>
+            </div>
+        </div>
+        {% empty %}
+        <p class="text-muted">暫無最新消息。</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

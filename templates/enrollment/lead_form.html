@@ -1,0 +1,58 @@
+{% extends "public/base_public.html" %}
+
+{% block title %}立即報名 | 技擊跆拳道會{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="max-width: 600px;">
+    <h1 class="mb-4">立即報名</h1>
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        <div class="mb-3">
+            <label class="form-label" for="{{ form.full_name.id_for_label }}">家長姓名</label>
+            {{ form.full_name }}
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="{{ form.contact_phone.id_for_label }}">聯絡電話</label>
+            {{ form.contact_phone }}
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="{{ form.contact_email.id_for_label }}">電郵 (可選)</label>
+            {{ form.contact_email }}
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="{{ form.interested_dojo.id_for_label }}">有興趣道場</label>
+            {{ form.interested_dojo }}
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="{{ form.child_age.id_for_label }}">學員年齡</label>
+            {{ form.child_age }}
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="{{ form.message.id_for_label }}">查詢內容</label>
+            {{ form.message }}
+        </div>
+
+        <div class="card bg-light mb-3">
+            <div class="card-body small">
+                <p class="mb-2"><strong>個人資料收集聲明 (PDPO)</strong></p>
+                <p class="mb-2">
+                    本會根據《個人資料（私隱）條例》收集閣下於本表格提供之個人資料，
+                    僅用於報名查詢、聯絡及課程安排之用途，不會在未經同意下轉交第三方。
+                </p>
+                <div class="form-check">
+                    {{ form.consent_pdpo }}
+                    <label class="form-check-label" for="{{ form.consent_pdpo.id_for_label }}">
+                        {{ form.consent_pdpo.label }}
+                    </label>
+                    {% if form.consent_pdpo.errors %}
+                    <div class="text-danger small">{{ form.consent_pdpo.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">提交報名查詢</button>
+    </form>
+</div>
+{% endblock %}

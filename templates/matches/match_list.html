@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Matches — 技擊跆拳道會 CRM{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-4">Matches</h1>
+<table class="table table-striped">
+    <thead><tr><th>Tournament</th><th>Type</th><th>Location</th></tr></thead>
+    <tbody>
+    {% for tournament in tournaments %}
+        <tr>
+            <td><a href="{% url 'matches:match_detail' tournament.pk %}">{{ tournament.name }}</a></td>
+            <td>{{ tournament.get_match_type_display }}</td>
+            <td>{{ tournament.location }}</td>
+        </tr>
+    {% empty %}
+        <tr><td colspan="3" class="text-muted">No tournaments found.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

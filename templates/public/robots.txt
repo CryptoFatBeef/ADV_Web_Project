@@ -1,0 +1,25 @@
+User-agent: *
+Allow: /$
+Allow: /about/
+Allow: /instructors/
+Allow: /our-dojos/
+Allow: /news/
+Allow: /showcase/
+Allow: /enroll/
+
+Disallow: /accounts/
+Disallow: /members/
+Disallow: /dojos/
+Disallow: /events/
+Disallow: /activities/
+Disallow: /skills/
+Disallow: /fees/
+Disallow: /payments/
+Disallow: /communications/
+Disallow: /cms/
+Disallow: /matches/
+Disallow: /chatbot/
+Disallow: /admin/
+Disallow: /media/
+
+Sitemap: https://{{ SITE_DOMAIN }}/sitemap.xml

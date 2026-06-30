@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Members — 技擊跆拳道會 CRM{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-4">Members</h1>
+<table class="table table-striped">
+    <thead><tr><th>Member ID</th><th>Name</th><th>Belt</th><th>Status</th><th>Dojo</th></tr></thead>
+    <tbody>
+    {% for member in members %}
+        <tr>
+            <td><a href="{% url 'members:member_detail' member.pk %}">{{ member.member_id }}</a></td>
+            <td>{{ member.user.get_full_name|default:member.user.username }}</td>
+            <td>{{ member.get_current_belt_display }}</td>
+            <td>{{ member.get_status_display }}</td>
+            <td>{{ member.primary_dojo }}</td>
+        </tr>
+    {% empty %}
+        <tr><td colspan="5" class="text-muted">No members found.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

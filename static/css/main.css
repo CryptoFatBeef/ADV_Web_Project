@@ -1,2 +1,78 @@
 /* ADV_Web_Project — main stylesheet */
 /* Add project-wide overrides here */
+
+:root {
+  --color-primary:      #1a1a2e;   /* Deep navy — black belt identity */
+  --color-accent:       #c9a84c;   /* Gold — rank/honour */
+  --color-sidebar-bg:   #16213e;   /* Sidebar background */
+  --color-sidebar-text: #e0e0e0;   /* Sidebar link text */
+  --color-surface:      #f8f9fa;   /* Main content background */
+  --color-border:       #dee2e6;
+  --font-base:          'Noto Sans TC', sans-serif;
+}
+
+body {
+  font-family: var(--font-base);
+  background-color: var(--color-surface);
+}
+
+.sidebar {
+  width: 240px;
+  min-height: 100vh;
+  background-color: var(--color-sidebar-bg);
+  color: var(--color-sidebar-text);
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 100;
+  padding-top: 1rem;
+}
+
+.sidebar .nav-link {
+  color: var(--color-sidebar-text);
+  padding: 0.6rem 1.25rem;
+  border-radius: 6px;
+  margin: 2px 8px;
+  transition: background 0.15s;
+}
+
+.sidebar .nav-link:hover,
+.sidebar .nav-link.active {
+  background-color: rgba(201, 168, 76, 0.15);
+  color: var(--color-accent);
+}
+
+.sidebar .club-logo-area {
+  padding: 1rem 1.25rem 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 1rem;
+}
+
+.sidebar-footer {
+  padding: 1rem 1.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: 1rem;
+}
+
+.main-content {
+  margin-left: 240px;
+}
+
+@media (max-width: 991.98px) {
+  .main-content {
+    margin-left: 0;
+  }
+}
+
+.top-navbar {
+  background-color: var(--color-primary);
+}
+
+.role-badge {
+  font-size: 0.7rem;
+  background-color: var(--color-accent);
+  color: #1a1a2e;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-weight: 600;
+}

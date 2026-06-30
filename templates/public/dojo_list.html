@@ -1,0 +1,23 @@
+{% extends "public/base_public.html" %}
+
+{% block title %}道場資訊 | 技擊跆拳道會{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h1 class="mb-4">道場資訊</h1>
+    <div class="row g-3">
+        {% for dojo in dojos %}
+        <div class="col-md-4">
+            <div class="belt-card h-100">
+                <h5>{{ dojo.name }}</h5>
+                <p class="text-muted small">{{ dojo.get_district_display }}</p>
+                <p>{{ dojo.address }}</p>
+                <a href="{% url 'public:dojo_detail' dojo.slug %}">查看詳情</a>
+            </div>
+        </div>
+        {% empty %}
+        <p class="text-muted">暫無道場資料。</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

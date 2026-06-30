@@ -1,0 +1,30 @@
+{% extends "public/base_public.html" %}
+
+{% block title %}{{ dojo.name }} | 技擊跆拳道會{% endblock %}
+
+{% block structured_data %}
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "SportsActivityLocation",
+    "name": "{{ dojo.name }}",
+    "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "{{ dojo.address|escapejs }}",
+        "addressLocality": "{{ dojo.get_district_display }}",
+        "addressCountry": "HK"
+    }
+    {% if dojo.phone %},"telephone": "{{ dojo.phone }}"{% endif %}
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h1>{{ dojo.name }}</h1>
+    <p class="text-muted">{{ dojo.get_district_display }}</p>
+    <p>{{ dojo.address }}</p>
+    {% if dojo.phone %}<p>電話: {{ dojo.phone }}</p>{% endif %}
+    <a class="btn btn-primary" href="{% url 'enrollment:lead_create' %}">立即報名</a>
+</div>
+{% endblock %}

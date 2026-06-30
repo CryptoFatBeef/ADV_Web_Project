@@ -1,5 +1,6 @@
 from django.db import models
 from django.db.models import Q
+from django.utils.text import slugify
 
 
 class DojoEntity(models.Model):
@@ -52,7 +53,17 @@ class DojoStaff(models.Model):
     joined_date = models.DateField()
     is_active = models.BooleanField(default=True)
 
+    # Public website bio fields (v0.3.1)
+    bio_zh = models.TextField(blank=True)
+    bio_en = models.TextField(blank=True)
+    photo = models.ImageField(upload_to='staff/', blank=True)
+    certifications = models.JSONField(default=list, blank=True)
+    is_public = models.BooleanField(default=False)
+    slug = models.SlugField(unique=True, blank=True)
+    display_order = models.PositiveIntegerField(default=0)
+
     class Meta:
+        ordering = ['display_order']
         constraints = [
             models.UniqueConstraint(
                 fields=['dojo'],
@@ -63,3 +74,14 @@ class DojoStaff(models.Model):
 
     def __str__(self):
         return f'{self.user} — {self.role} @ {self.dojo}'
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            base_slug = slugify(self.user.get_full_name() or self.user.username)
+            slug = base_slug
+            suffix = 1
+            while DojoStaff.objects.filter(slug=slug).exclude(pk=self.pk).exists():
+                suffix += 1
+                slug = f'{base_slug}-{suffix}'
+            self.slug = slug
+        super().save(*args, **kwargs)

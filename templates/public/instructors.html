@@ -1,0 +1,30 @@
+{% extends "public/base_public.html" %}
+
+{% block title %}教練團隊 | 技擊跆拳道會{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h1 class="mb-4">教練團隊</h1>
+    <div class="row g-3">
+        {% for staff in instructors %}
+        <div class="col-md-4">
+            <div class="belt-card h-100">
+                {% if staff.photo %}<img src="{{ staff.photo.url }}" class="img-fluid mb-2" alt="{{ staff.user.get_full_name }}">{% endif %}
+                <h5>{{ staff.user.get_full_name }}</h5>
+                <p class="text-muted small">{{ staff.get_role_display }} — {{ staff.dojo.name }}</p>
+                <p>{{ staff.bio_zh }}</p>
+                {% if staff.certifications %}
+                <ul class="small text-muted">
+                    {% for cert in staff.certifications %}
+                    <li>{{ cert.org }} — {{ cert.rank }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>
+        </div>
+        {% empty %}
+        <p class="text-muted">暫無公開教練資料。</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

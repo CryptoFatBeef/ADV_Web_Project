@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}Fees & Payments — 技擊跆拳道會 CRM{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-4">Fees & Payments</h1>
+<table class="table table-striped">
+    <thead><tr><th>Member</th><th>Year</th><th>Amount Due</th><th>Balance</th><th>Status</th><th>Invoice</th></tr></thead>
+    <tbody>
+    {% for fee in fees %}
+        <tr>
+            <td>{{ fee.member }}</td>
+            <td>{{ fee.year }}</td>
+            <td>HK${{ fee.amount_due }}</td>
+            <td>HK${{ fee.balance_due }}</td>
+            <td>{{ fee.get_status_display }}</td>
+            <td>
+                {% if fee.invoice %}
+                <a href="{% url 'fees:invoice_pdf' fee.invoice.pk %}">PDF</a>
+                {% endif %}
+            </td>
+        </tr>
+    {% empty %}
+        <tr><td colspan="6" class="text-muted">No fees found.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

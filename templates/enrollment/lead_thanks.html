@@ -1,0 +1,11 @@
+{% extends "public/base_public.html" %}
+
+{% block title %}報名查詢已收妥 | 技擊跆拳道會{% endblock %}
+
+{% block content %}
+<div class="container py-5 text-center">
+    <h1>多謝您的查詢！</h1>
+    <p class="lead">我們已收到您的報名查詢，本會職員將盡快與您聯絡。</p>
+    <a class="btn btn-primary" href="{% url 'public:home' %}">返回首頁</a>
+</div>
+{% endblock %}

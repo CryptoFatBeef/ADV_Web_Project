@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}CMS / Website — 技擊跆拳道會 CRM{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-4">CMS / Website</h1>
+<table class="table table-striped">
+    <thead><tr><th>Title</th><th>Section</th><th>Status</th><th>Order</th><th></th></tr></thead>
+    <tbody>
+    {% for page in pages %}
+        <tr>
+            <td>{{ page.title }}</td>
+            <td>{{ page.get_section_display }}</td>
+            <td>{{ page.get_status_display }}</td>
+            <td>{{ page.order }}</td>
+            <td><a href="{% url 'cms:page_edit' page.pk %}">Edit</a></td>
+        </tr>
+    {% empty %}
+        <tr><td colspan="5" class="text-muted">No content blocks found.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

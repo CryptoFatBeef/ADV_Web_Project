@@ -28,6 +28,8 @@ INSTALLED_APPS = [
     'apps.cms',
     'apps.matches',
     'apps.chatbot',
+    'apps.public',
+    'apps.enrollment',
 ]
 
 MIDDLEWARE = [
@@ -53,6 +55,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'apps.public.context_processors.site_settings',
             ],
         },
     },
@@ -61,6 +64,10 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 
 AUTH_USER_MODEL = 'accounts.User'
+
+LOGIN_URL = '/accounts/login/'
+LOGIN_REDIRECT_URL = '/accounts/dashboard/'
+LOGOUT_REDIRECT_URL = '/accounts/login/'
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
@@ -130,3 +137,8 @@ OPENROUTER_MODEL    = config('OPENROUTER_MODEL',    default='anthropic/claude-so
 # ----- WhatsApp Business API -----
 WHATSAPP_API_TOKEN = config('WHATSAPP_API_TOKEN', default='')
 WHATSAPP_PHONE_NUMBER_ID = config('WHATSAPP_PHONE_NUMBER_ID', default='')
+
+# ----- Public site -----
+SITE_DOMAIN = config('SITE_DOMAIN', default='example.com')
+SITE_FACEBOOK_URL = config('SITE_FACEBOOK_URL', default='')
+SITE_INSTAGRAM_URL = config('SITE_INSTAGRAM_URL', default='')
