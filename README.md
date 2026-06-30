@@ -77,13 +77,16 @@ ADV_Web_Project/
 │   ├── members/             # Member CRM core
 │   ├── dojos/               # Dojo / branch management
 │   ├── events/              # Events, exams, tournaments, attendance
+│   ├── activities/          # Belt grading / referee promotion / competition applications (FSM workflow)
 │   ├── skills/              # Skill records per exam
 │   ├── fees/                # Annual fees, invoices
 │   ├── payments/            # Stripe + PayMe gateway integration
 │   ├── communications/      # In-app, email, WhatsApp
 │   ├── cms/                 # Public website content management
 │   ├── matches/             # Match and tournament results
-│   └── chatbot/             # Chatbot config and FAQ management
+│   ├── chatbot/             # Chatbot config and FAQ management
+│   ├── public/              # Public-facing marketing site (no models)
+│   └── enrollment/          # Public enrollment lead capture
 │
 ├── templates/               # Global templates
 ├── static/                  # CSS, JS, images
@@ -222,7 +225,9 @@ Copy `.env.example` to `.env` and fill in all values. **Never commit `.env` to G
 | `STRIPE_WEBHOOK_SECRET` | ✅ | Stripe webhook signing secret | `whsec_xxxxx` |
 | `PAYME_MERCHANT_ID` | ✅ | PayMe merchant ID | `xxxxx` |
 | `PAYME_API_KEY` | ✅ | PayMe API key | `xxxxx` |
-| `ANTHROPIC_API_KEY` | ✅ | Claude API key (chatbot) | `sk-ant-xxxxx` |
+| `OPENROUTER_API_KEY` | ✅ | OpenRouter API key (chatbot LLM backend) | `sk-or-xxxxx` |
+| `OPENROUTER_BASE_URL` | ✅ | OpenRouter API base URL | `https://openrouter.ai/api/v1` |
+| `OPENROUTER_MODEL` | ✅ | OpenRouter model identifier — switchable without code changes | `anthropic/claude-sonnet-4-6` |
 | `EMAIL_HOST` | ✅ | SMTP host | `smtp.gmail.com` |
 | `EMAIL_PORT` | ✅ | SMTP port | `587` |
 | `EMAIL_HOST_USER` | ✅ | SMTP username | `no-reply@advancedtkd.net` |
