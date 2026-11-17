@@ -4,27 +4,30 @@
 
 {% block content %}
 <div class="container py-5">
-    <h1 class="mb-4">教練團隊</h1>
-    <div class="row g-3">
-        {% for staff in instructors %}
-        <div class="col-md-4">
-            <div class="belt-card h-100">
-                {% if staff.photo %}<img src="{{ staff.photo.url }}" class="img-fluid mb-2" alt="{{ staff.user.get_full_name }}">{% endif %}
-                <h5>{{ staff.user.get_full_name }}</h5>
-                <p class="text-muted small">{{ staff.get_role_display }} — {{ staff.dojo.name }}</p>
-                <p>{{ staff.bio_zh }}</p>
-                {% if staff.certifications %}
-                <ul class="small text-muted">
-                    {% for cert in staff.certifications %}
-                    <li>{{ cert.org }} — {{ cert.rank }}</li>
-                    {% endfor %}
-                </ul>
-                {% endif %}
+    <h1 class="mb-2">教練團隊</h1>
+    <p class="text-muted mb-5">香港跆拳道協會 認可教練資格</p>
+
+    {% if not has_graded_instructors %}
+    <p class="text-muted">暫無公開教練資料。</p>
+    {% endif %}
+
+    {% for level_label, staff_list in instructor_groups %}
+    {% if staff_list %}
+    <section class="instructor-level mb-5">
+        <h2 class="instructor-level-title">{{ level_label }}</h2>
+        <div class="row g-3">
+            {% for staff in staff_list %}
+            <div class="col-md-4">
+                <div class="belt-card instructor-card h-100">
+                    {% if staff.photo %}<img src="{{ staff.photo.url }}" class="img-fluid rounded mb-3" alt="{{ staff.user.get_full_name }}">{% endif %}
+                    <h5 class="mb-1"><a href="{% url 'public:instructor_detail' staff.slug %}">{{ staff.user.get_full_name }}</a></h5>
+                    <p class="text-muted small mb-0">{{ staff.dojo.name }}</p>
+                </div>
             </div>
+            {% endfor %}
         </div>
-        {% empty %}
-        <p class="text-muted">暫無公開教練資料。</p>
-        {% endfor %}
-    </div>
+    </section>
+    {% endif %}
+    {% endfor %}
 </div>
 {% endblock %}

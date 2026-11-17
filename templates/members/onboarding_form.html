@@ -1,0 +1,119 @@
+{% extends "public/base_public.html" %}
+
+{% block title %}會員登記 | 技擊跆拳道會{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="max-width: 700px;">
+    <h1 class="mb-1">會員登記</h1>
+    <p class="text-muted mb-4">{{ invitation.target_dojo.name }} — {{ invitation.contact_email }}</p>
+
+    {% if form.non_field_errors %}
+    <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+    {% endif %}
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        <div class="card mb-4">
+            <div class="card-header">監護人資料 Guardian</div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">{{ form.guardian_first_name.label }}</label>
+                        {{ form.guardian_first_name }}
+                        {{ form.guardian_first_name.errors }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">{{ form.guardian_last_name.label }}</label>
+                        {{ form.guardian_last_name }}
+                        {{ form.guardian_last_name.errors }}
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">{{ form.guardian_phone.label }}</label>
+                    {{ form.guardian_phone }}
+                    {{ form.guardian_phone.errors }}
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">{{ form.relationship.label }}</label>
+                    {{ form.relationship }}
+                    {{ form.relationship.errors }}
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">{{ form.password.label }}</label>
+                        {{ form.password }}
+                        {{ form.password.errors }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">{{ form.password_confirm.label }}</label>
+                        {{ form.password_confirm }}
+                        {{ form.password_confirm.errors }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">會員資料 Member (Child)</div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">{{ form.member_first_name.label }}</label>
+                        {{ form.member_first_name }}
+                        {{ form.member_first_name.errors }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">{{ form.member_last_name.label }}</label>
+                        {{ form.member_last_name }}
+                        {{ form.member_last_name.errors }}
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">{{ form.member_chinese_name.label }}</label>
+                    {{ form.member_chinese_name }}
+                    {{ form.member_chinese_name.errors }}
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">{{ form.date_of_birth.label }}</label>
+                        {{ form.date_of_birth }}
+                        {{ form.date_of_birth.errors }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">{{ form.gender.label }}</label>
+                        {{ form.gender }}
+                        {{ form.gender.errors }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">{{ form.height_cm.label }}</label>
+                        {{ form.height_cm }}
+                        {{ form.height_cm.errors }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">{{ form.weight_kg.label }}</label>
+                        {{ form.weight_kg }}
+                        {{ form.weight_kg.errors }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">{{ form.emergency_contact_name.label }}</label>
+                        {{ form.emergency_contact_name }}
+                        {{ form.emergency_contact_name.errors }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">{{ form.emergency_contact_phone.label }}</label>
+                        {{ form.emergency_contact_phone }}
+                        {{ form.emergency_contact_phone.errors }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">完成登記 Complete Registration</button>
+    </form>
+</div>
+{% endblock %}

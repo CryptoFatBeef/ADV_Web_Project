@@ -1,0 +1,36 @@
+{% extends "public/base_public.html" %}
+
+{% block title %}{{ staff.user.get_full_name }} | 教練團隊 | 技擊跆拳道會{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <a href="{% url 'public:instructors' %}" class="text-muted small d-inline-block mb-4">&larr; 返回教練團隊</a>
+    <div class="row g-4">
+        <div class="col-md-4">
+            {% if staff.photo %}<img src="{{ staff.photo.url }}" class="img-fluid rounded" alt="{{ staff.user.get_full_name }}">{% endif %}
+        </div>
+        <div class="col-md-8">
+            <h1 class="mb-1">{{ staff.user.get_full_name }}</h1>
+            {% if staff.get_coach_level_display %}
+            <p class="instructor-level-badge">香港跆拳道協會 {{ staff.get_coach_level_display }}</p>
+            {% endif %}
+            <p class="text-muted small">{{ staff.get_role_display }} — {{ staff.dojo.name }}</p>
+            {% if staff.bio_zh %}<p class="mt-3">{{ staff.bio_zh }}</p>{% endif %}
+
+            {% if staff.certifications %}
+            <h5 class="mt-4">資格證書</h5>
+            <ul class="small text-muted">
+                {% for cert in staff.certifications %}
+                <li>
+                    {% if cert.org_zh %}{{ cert.org_zh }}{% elif cert.org_en %}{{ cert.org_en }}{% endif %}
+                    —
+                    {% if cert.level_zh %}{{ cert.level_zh }}{% elif cert.level_en %}{{ cert.level_en }}{% endif %}
+                    {% if cert.year %}({{ cert.year }}){% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

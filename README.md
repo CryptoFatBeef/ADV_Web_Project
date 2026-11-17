@@ -289,13 +289,36 @@ Refer to `docs/deployment_guide.md` (TBD) for full production setup steps.
 
 ---
 
+## Verification Suite
+
+A cross-cutting test suite that checks the running site against what README.md /
+DEBUGLOG.md / Blueprint v0.7.1 describe. Runs as a standalone pytest package
+separate from `apps/*/tests.py`.
+
+```bash
+pip install -r requirements/test.txt
+python manage.py seed_test_users --settings=config.settings.dev
+python manage.py seed_test_org_data --settings=config.settings.dev
+pytest verification/checks --settings=config.settings.dev -v
+```
+
+Results: `verification/reports/results_latest.json` / `.csv`
+
+See [verification/README.md](verification/README.md) for full setup, scraper
+instructions, seed commands, and the canary-test convention.
+
+---
+
 ## Contributing
 
 1. Branch naming: `feature/<feature-name>`, `fix/<issue>`, `docs/<topic>`  
 2. Always work on a branch — never commit directly to `main`  
 3. Write migration files for every model change  
 4. Log significant bugs and fixes in `DEBUGLOG.md`  
-5. Keep `.env` out of Git — update `.env.example` when adding new variables
+5. Keep `.env` out of Git — update `.env.example` when adding new variables  
+6. When closing a known issue from DEBUGLOG.md, update the corresponding canary
+   test in `verification/checks/test_known_issues_regression.py` and
+   `verification/docs_data/debuglog_known_issues.py`
 
 ---
 

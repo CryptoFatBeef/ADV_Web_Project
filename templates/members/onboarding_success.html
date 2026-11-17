@@ -1,0 +1,12 @@
+{% extends "public/base_public.html" %}
+
+{% block title %}登記完成 | 技擊跆拳道會{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="max-width: 600px;">
+    <h1 class="mb-4">登記完成！</h1>
+    <p class="text-muted">多謝閣下完成會員登記，本會職員會盡快與您聯絡。</p>
+    <p class="text-muted small">Registration complete. You can now log in with the email/username and password you set.</p>
+    <a class="btn btn-primary" href="{% url 'accounts:login' %}">前往登入 Go to Login</a>
+</div>
+{% endblock %}

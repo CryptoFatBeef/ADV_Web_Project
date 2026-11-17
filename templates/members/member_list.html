@@ -3,7 +3,10 @@
 {% block title %}Members — 技擊跆拳道會 CRM{% endblock %}
 
 {% block content %}
-<h1 class="h3 mb-4">Members</h1>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">Members</h1>
+    <a class="btn btn-primary" href="{% url 'members:invitation_create' %}">邀請新會員 Invite New Member</a>
+</div>
 <table class="table table-striped">
     <thead><tr><th>Member ID</th><th>Name</th><th>Belt</th><th>Status</th><th>Dojo</th></tr></thead>
     <tbody>

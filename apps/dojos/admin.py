@@ -6,7 +6,7 @@ from .models import DojoEntity, DojoStaff
 class DojoStaffInline(admin.TabularInline):
     model = DojoStaff
     extra = 1
-    fields = ('user', 'role', 'joined_date', 'is_active', 'is_public', 'display_order')
+    fields = ('user', 'role', 'coach_level', 'joined_date', 'is_active', 'is_public', 'display_order')
 
 
 @admin.register(DojoEntity)
@@ -18,10 +18,10 @@ class DojoEntityAdmin(admin.ModelAdmin):
 
 @admin.register(DojoStaff)
 class DojoStaffAdmin(admin.ModelAdmin):
-    list_display = ('user', 'dojo', 'role', 'is_active', 'is_public', 'display_order')
-    list_filter = ('role', 'is_active', 'is_public')
+    list_display = ('user', 'dojo', 'role', 'coach_level', 'is_active', 'is_public', 'display_order')
+    list_filter = ('role', 'coach_level', 'is_active', 'is_public')
     fields = (
-        'dojo', 'user', 'role', 'joined_date', 'is_active',
+        'dojo', 'user', 'role', 'coach_level', 'joined_date', 'is_active',
         'bio_zh', 'bio_en', 'photo', 'certifications',
         'is_public', 'slug', 'display_order',
     )

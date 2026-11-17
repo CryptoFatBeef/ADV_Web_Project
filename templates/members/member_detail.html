@@ -4,23 +4,210 @@
 {% block title %}{{ member.member_id }} — 技擊跆拳道會 CRM{% endblock %}
 
 {% block content %}
-<h1 class="h3 mb-4">{{ member.user.get_full_name|default:member.user.username }}</h1>
-<dl class="row">
-    <dt class="col-sm-3">Member ID</dt>
-    <dd class="col-sm-9">{{ member.member_id }}</dd>
-    <dt class="col-sm-3">Belt</dt>
-    <dd class="col-sm-9">{{ member.get_current_belt_display }}</dd>
-    <dt class="col-sm-3">Tier</dt>
-    <dd class="col-sm-9">{{ member.get_tier_display }}</dd>
-    <dt class="col-sm-3">Status</dt>
-    <dd class="col-sm-9">{{ member.get_status_display }}</dd>
-    <dt class="col-sm-3">Primary Dojo</dt>
-    <dd class="col-sm-9">{{ member.primary_dojo }}</dd>
-    <dt class="col-sm-3">Joined</dt>
-    <dd class="col-sm-9">{{ member.joined_date }}</dd>
-</dl>
+<div class="d-flex justify-content-between align-items-start mb-4">
+    <div>
+        <h1 class="h3 mb-1">{{ member.user.get_full_name|default:member.user.username }}</h1>
+        {% if member.chinese_name %}<p class="text-muted mb-0">{{ member.chinese_name }}</p>{% endif %}
+    </div>
+    {% has_role request.user 'GRANDMASTER' 'DEPUTY_GRANDMASTER' 'ADMIN' %}
+    <a class="btn btn-primary" href="{% url 'members:member_edit' member.pk %}">Edit</a>
+    {% end_has_role %}
+</div>
 
-{% has_role request.user 'GRANDMASTER' 'DEPUTY_GRANDMASTER' 'ADMIN' %}
-<a class="btn btn-primary" href="{% url 'members:member_edit' member.pk %}">Edit</a>
-{% end_has_role %}
+{% if member.is_minor and not guardians %}
+<div class="alert alert-warning">未滿18歲會員應設有監護人 — Minor member has no linked guardian.</div>
+{% endif %}
+
+<ul class="nav nav-tabs mb-3" id="memberTab" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile-pane" type="button" role="tab" aria-controls="profile-pane" aria-selected="true">基本資料 Profile</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="guardians-tab" data-bs-toggle="tab" data-bs-target="#guardians-pane" type="button" role="tab" aria-controls="guardians-pane" aria-selected="false">監護人 Guardians</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="belt-tab" data-bs-toggle="tab" data-bs-target="#belt-pane" type="button" role="tab" aria-controls="belt-pane" aria-selected="false">段位及證書 Belt &amp; Certifications</button>
+    </li>
+    {% if can_view_payments %}
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="payments-tab" data-bs-toggle="tab" data-bs-target="#payments-pane" type="button" role="tab" aria-controls="payments-pane" aria-selected="false">付款記錄 Payments</button>
+    </li>
+    {% endif %}
+</ul>
+
+<div class="tab-content" id="memberTabContent">
+
+    <div class="tab-pane fade show active" id="profile-pane" role="tabpanel" aria-labelledby="profile-tab">
+        <dl class="row">
+            <dt class="col-sm-3">Member ID</dt>
+            <dd class="col-sm-9">{{ member.member_id }}</dd>
+            <dt class="col-sm-3">Chinese Name 中文姓名</dt>
+            <dd class="col-sm-9">{{ member.chinese_name|default:"—" }}</dd>
+            <dt class="col-sm-3">Date of Birth</dt>
+            <dd class="col-sm-9">{{ member.date_of_birth }} ({{ member.age }})</dd>
+            <dt class="col-sm-3">Gender</dt>
+            <dd class="col-sm-9">{{ member.get_gender_display }}</dd>
+            <dt class="col-sm-3">Height / Weight</dt>
+            <dd class="col-sm-9">{{ member.height_cm|default:"—" }} cm / {{ member.weight_kg|default:"—" }} kg</dd>
+            <dt class="col-sm-3">Contact Phone</dt>
+            <dd class="col-sm-9">{{ member.user.phone|default:"—" }}</dd>
+            <dt class="col-sm-3">Contact Email</dt>
+            <dd class="col-sm-9">{{ member.user.email|default:"—" }}</dd>
+            <dt class="col-sm-3">Emergency Contact</dt>
+            <dd class="col-sm-9">{{ member.emergency_contact_name }} — {{ member.emergency_contact_phone }}</dd>
+            <dt class="col-sm-3">Belt</dt>
+            <dd class="col-sm-9">{{ member.get_current_belt_display }}</dd>
+            <dt class="col-sm-3">Tier</dt>
+            <dd class="col-sm-9">{{ member.get_tier_display }}</dd>
+            <dt class="col-sm-3">Status</dt>
+            <dd class="col-sm-9">{{ member.get_status_display }}</dd>
+            <dt class="col-sm-3">Primary Dojo</dt>
+            <dd class="col-sm-9">{{ member.primary_dojo }}</dd>
+            <dt class="col-sm-3">Registration Date 登記日期</dt>
+            <dd class="col-sm-9">{{ member.joined_date }}</dd>
+            {% if member.notes %}
+            <dt class="col-sm-3">Notes</dt>
+            <dd class="col-sm-9">{{ member.notes }}</dd>
+            {% endif %}
+        </dl>
+    </div>
+
+    <div class="tab-pane fade" id="guardians-pane" role="tabpanel" aria-labelledby="guardians-tab">
+        {% if guardians %}
+        <table class="table table-sm">
+            <thead>
+                <tr><th>Name</th><th>Relationship</th><th>Phone</th><th>Email</th></tr>
+            </thead>
+            <tbody>
+                {% for link in guardians %}
+                <tr>
+                    <td>{{ link.guardian.get_full_name|default:link.guardian.username }}{% if link.is_primary %} <span class="badge bg-secondary">Primary</span>{% endif %}</td>
+                    <td>{{ link.get_relationship_display }}</td>
+                    <td>{{ link.guardian.phone|default:"—" }}</td>
+                    <td>{{ link.guardian.email|default:"—" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="text-muted">未有已連結的監護人記錄。No guardian linked yet.</p>
+        {% endif %}
+    </div>
+
+    <div class="tab-pane fade" id="belt-pane" role="tabpanel" aria-labelledby="belt-tab">
+        <h2 class="h6">色帶／黑帶考獲記錄 Belt Promotion History</h2>
+        {% if belt_promotions %}
+        <table class="table table-sm mb-4">
+            <thead><tr><th>Belt</th><th>Date</th><th>Dojo</th><th>Promoted By</th></tr></thead>
+            <tbody>
+                {% for promo in belt_promotions %}
+                <tr>
+                    <td>{{ promo.get_belt_display }}</td>
+                    <td>{{ promo.promoted_date }}</td>
+                    <td>{{ promo.dojo|default:"—" }}</td>
+                    <td>{{ promo.promoted_by|default:"—" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="text-muted mb-4">暫無段位考獲記錄。No belt promotion records yet.</p>
+        {% endif %}
+
+        <h2 class="h6">證書記錄 Certificates</h2>
+        {% if certificates %}
+        <table class="table table-sm mb-4">
+            <thead><tr><th>Certificate</th><th>Issuing Body</th><th>Acquired</th><th>Valid Until</th></tr></thead>
+            <tbody>
+                {% for cert in certificates %}
+                <tr>
+                    <td>{{ cert.certificate_name }}</td>
+                    <td>{{ cert.issuing_body|default:"—" }}</td>
+                    <td>{{ cert.date_acquired }}</td>
+                    <td>{{ cert.valid_until|default:"—" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="text-muted mb-4">暫無證書記錄。No certificate records yet.</p>
+        {% endif %}
+
+        {% if dojo_staff_roles %}
+        <h2 class="h6">教練職務 Coach Roles</h2>
+        <ul>
+            {% for staff in dojo_staff_roles %}
+            <li>
+                {{ staff.get_role_display }}{% if staff.coach_level %} — {{ staff.get_coach_level_display }}{% endif %}
+                @ {{ staff.dojo.name }}{% if not staff.is_active %} (Inactive){% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+
+        {% if coach_certifications %}
+        <h2 class="h6">教練資格考核記錄 Coach Certification History</h2>
+        <table class="table table-sm">
+            <thead>
+                <tr><th>Course</th><th>Certifying Body</th><th>Exam Date</th><th>Result</th></tr>
+            </thead>
+            <tbody>
+                {% for cert in coach_certifications %}
+                <tr>
+                    <td>{{ cert.course_name }}</td>
+                    <td>{{ cert.certifying_body }}</td>
+                    <td>{{ cert.exam_date }}</td>
+                    <td>{{ cert.get_result_display }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+    </div>
+
+    {% if can_view_payments %}
+    <div class="tab-pane fade" id="payments-pane" role="tabpanel" aria-labelledby="payments-tab">
+        <h2 class="h6">年費記錄 Annual Fees</h2>
+        {% if annual_fees %}
+        <table class="table table-sm mb-4">
+            <thead><tr><th>Year</th><th>Amount Due</th><th>Amount Paid</th><th>Status</th><th>Due Date</th></tr></thead>
+            <tbody>
+                {% for fee in annual_fees %}
+                <tr>
+                    <td>{{ fee.year }}</td>
+                    <td>{{ fee.amount_due }}</td>
+                    <td>{{ fee.amount_paid }}</td>
+                    <td>{{ fee.get_status_display }}</td>
+                    <td>{{ fee.due_date }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="text-muted mb-4">暫無年費記錄。No annual fee records yet.</p>
+        {% endif %}
+
+        <h2 class="h6">付款記錄 Payment Records</h2>
+        {% if payment_records %}
+        <table class="table table-sm">
+            <thead><tr><th>Date</th><th>Method</th><th>Amount</th><th>Status</th><th>Reference</th></tr></thead>
+            <tbody>
+                {% for payment in payment_records %}
+                <tr>
+                    <td>{{ payment.created_at|date:"Y-m-d" }}</td>
+                    <td>{{ payment.get_method_display }}</td>
+                    <td>{{ payment.currency }} {{ payment.amount }}</td>
+                    <td>{{ payment.get_status_display }}</td>
+                    <td>{{ payment.reference_id|default:"—" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="text-muted">暫無付款記錄。No payment records yet.</p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+</div>
 {% endblock %}

@@ -1,6 +1,11 @@
 from django.contrib import admin
 
-from .models import ActivityApplication, ActivityEvent, ActivityTemplate
+from .models import ActivityApplication, ActivityEvent, ActivityTemplate, CoachCertificationRecord
+
+
+class CoachCertificationRecordInline(admin.StackedInline):
+    model = CoachCertificationRecord
+    extra = 0
 
 
 @admin.register(ActivityTemplate)
@@ -21,6 +26,7 @@ def action_submit(modeladmin, request, queryset):
         obj.submit()
         obj.save()
 
+
 action_submit.short_description = 'Submit selected applications (DRAFT → Awaiting Coach Rec)'
 
 
@@ -28,6 +34,7 @@ def action_approve(modeladmin, request, queryset):
     for obj in queryset.filter(state='AWAITING_GM_APPROVAL'):
         obj.approve()
         obj.save()
+
 
 action_approve.short_description = 'Approve selected applications (Awaiting GM → Pending Payment)'
 
@@ -39,3 +46,4 @@ class ActivityApplicationAdmin(admin.ModelAdmin):
     search_fields = ('member__member_id', 'member__user__last_name')
     readonly_fields = ('state', 'submitted_at', 'completed_at')
     actions = [action_submit, action_approve]
+    inlines = [CoachCertificationRecordInline]

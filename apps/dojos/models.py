@@ -43,6 +43,11 @@ class DojoStaff(models.Model):
         ASSISTANT_COACH = 'ASSISTANT_COACH', 'Assistant Coach'
         ADMIN_STAFF = 'ADMIN_STAFF', 'Admin Staff'
 
+    class CoachLevel(models.TextChoices):
+        SENIOR = 'SENIOR', '高級教練'
+        INTERMEDIATE = 'INTERMEDIATE', '中級教練'
+        ELEMENTARY = 'ELEMENTARY', '初級教練'
+
     dojo = models.ForeignKey(
         DojoEntity, on_delete=models.PROTECT, related_name='staff'
     )
@@ -58,6 +63,16 @@ class DojoStaff(models.Model):
     bio_en = models.TextField(blank=True)
     photo = models.ImageField(upload_to='staff/', blank=True)
     certifications = models.JSONField(default=list, blank=True)
+    coach_level = models.CharField(
+        max_length=20,
+        choices=CoachLevel.choices,
+        blank=True,
+        help_text=(
+            'HKTKDA coaching tier shown on the public /instructors/ page. '
+            'Set manually once a member has passed the relevant HKTKDA course '
+            '(see activities.CoachCertificationRecord). Leave blank for non-coach staff.'
+        ),
+    )
     is_public = models.BooleanField(default=False)
     slug = models.SlugField(unique=True, blank=True)
     display_order = models.PositiveIntegerField(default=0)
