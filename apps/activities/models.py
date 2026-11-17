@@ -3,11 +3,14 @@ from django.db import models
 from django.utils import timezone
 from django_fsm import FSMField, transition
 
+from apps.skills.models import SkillResult
+
 
 class ActivityType(models.TextChoices):
     BELT_GRADING = 'BELT_GRADING', 'Belt Grading'
     REFEREE_PROMOTION = 'REFEREE_PROMOTION', 'Referee Promotion'
     COMPETITION_APPLICATION = 'COMPETITION_APPLICATION', 'Competition Application'
+    COACH_CERTIFICATION = 'COACH_CERTIFICATION', 'Coach Certification'
     OTHER = 'OTHER', 'Other'
 
 
@@ -121,3 +124,20 @@ class ActivityApplication(models.Model):
     @transition(field=state, source='PROCESSING_PDF', target='COMPLETED')
     def complete(self):
         self.completed_at = timezone.now()
+
+
+class CoachCertificationRecord(models.Model):
+    activity_application = models.OneToOneField(
+        ActivityApplication,
+        on_delete=models.CASCADE,
+        related_name='coach_certification',
+    )
+    certifying_body = models.CharField(max_length=200, default='HKTKDA')
+    course_name = models.CharField(max_length=200)
+    exam_date = models.DateField()
+    result = models.CharField(max_length=10, choices=SkillResult.choices)
+    certificate_number = models.CharField(max_length=100, blank=True)
+    notes = models.CharField(max_length=300, blank=True)
+
+    def __str__(self):
+        return f'{self.activity_application.member} — {self.course_name} [{self.result}]'

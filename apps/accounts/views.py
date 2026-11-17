@@ -22,6 +22,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
                 start_datetime__gte=timezone.now()
             ).order_by('start_datetime')[:5]
             context['pending_fees'] = AnnualFee.objects.filter(status='UNPAID').count()
+            context['my_upcoming_events'] = []   # always supply so template |default filter works
 
         elif role == 'COACH':
             coach_dojos = DojoStaff.objects.filter(
@@ -36,6 +37,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
                 start_datetime__gte=timezone.now(),
             ).order_by('start_datetime')[:5]
             context['pending_fees'] = None
+            context['my_upcoming_events'] = []   # always supply so template |default filter works
 
         else:
             context['my_attendance'] = AttendanceLog.objects.filter(
@@ -47,6 +49,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             context['my_pending_fees'] = AnnualFee.objects.filter(
                 member__user=user, status='UNPAID'
             ).count()
+            context['upcoming_events'] = []   # always supply so template |default filter works
 
         return context
 

@@ -1,0 +1,12 @@
+{% extends "public/base_public.html" %}
+
+{% block title %}邀請已失效 | 技擊跆拳道會{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="max-width: 600px;">
+    <h1 class="mb-4">邀請連結已失效</h1>
+    <p class="text-muted">此邀請連結已失效、過期或已使用。請聯絡您的道場教練重新發送邀請。</p>
+    <p class="text-muted small">This invitation link is invalid, expired, or already used. Please contact your dojo coach for a new invitation.</p>
+    <a class="btn btn-primary" href="{% url 'public:home' %}">返回首頁 Back to Home</a>
+</div>
+{% endblock %}

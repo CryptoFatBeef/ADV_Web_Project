@@ -25,3 +25,10 @@ private_media/*
 !private_media/.gitkeep
 # Migration output — production data, do not commit
 Coding/tools/migration/output/
+
+# Verification / local-only secrets and PII — never commit
+verification/fixtures/legacy_data/
+verification/PERSONAS.md
+verification/fixtures/test_credentials.csv
+verification/reports/results_latest.json
+.pytest_cache/

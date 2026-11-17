@@ -58,8 +58,8 @@ def get_chat_response(session, user_message: str) -> str:
         messages=messages,
     )
 
-    reply_text    = response.choices[0].message.content
-    input_tokens  = response.usage.prompt_tokens
+    reply_text = response.choices[0].message.content
+    input_tokens = response.usage.prompt_tokens
     output_tokens = response.usage.completion_tokens
 
     # Save assistant reply with token counts

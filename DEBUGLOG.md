@@ -53,6 +53,255 @@ Any related docs, Stack Overflow links, or Django docs sections worth bookmarkin
 
 ---
 
+### [2026-08-12] — Member CRM Module Overhaul: Full Profile, Belt/Certificate History, Payments Tab, Guardian Self-Service Onboarding
+
+**Status:** Resolved
+**Severity:** Medium
+**App / Module:** apps/members, apps/fees, apps/payments (read-only), templates/members
+**Environment:** Dev
+
+**Symptom:**
+The Member CRM module was a thin shell: the detail page showed only 6 of `MemberProfile`'s fields, the edit view exposed only 5 (`fields = ['status', 'current_belt', 'tier', 'primary_dojo', 'public_showcase_consent']`), there was no belt-promotion history, no certificate-expiry tracking, no payment visibility on the member page, and no way to onboard a new member (especially a minor) without going through Django Admin by hand.
+
+**Root Cause:**
+Feature gap — this functionality was never built, not a regression. Notably, `DEBUGLOG.md` [2026-06-30] (Parent Consent Deferred) had already recorded a deliberate decision to defer a Parent↔Member guardian model "pending a decision on legal guardianship vs. enrollment-contact semantics" — resolved in this pass per an explicit product decision: build a real linked `User` account (role=PARENT) with no legal-authority enforcement, just accurate contact/relationship data.
+
+**Fix Applied:**
+- `MemberProfile` gained `chinese_name`, `height_cm`, `weight_kg` (contact phone/email and registration date already existed via `user.phone`/`user.email`/`joined_date`, just weren't displayed/editable).
+- New models (`apps/members/models.py`): `BeltPromotionRecord` (belt-achievement history, manually maintained — no automated derivation from `SkillRecord`, matching the rest of the codebase's manual-step convention), `MemberCertificate` (general certificate name/issuing body/acquired/valid-until, distinct from the coach-exam-specific `CoachCertificationRecord`), `MemberGuardian` (many-to-many member↔guardian-User link with `relationship`/`is_primary`, no legal enforcement — `MemberProfile.is_minor` is a plain computed property, and a missing guardian on a minor is a non-blocking warning banner, not a hard save-time constraint), `RegistrationInvitation` (UUID-token, 7-day-expiring, PENDING/COMPLETED/EXPIRED/REVOKED).
+- `MemberDetailView`/`member_detail.html` rewritten as Bootstrap 5 tabs (new pattern for this project — nothing existing to reuse): Profile / Guardians / Belt & Certifications / Payments. The Payments tab (`annual_fees` + `payment_records`, reached via the `annual_fee__member` traversal since neither `Invoice` nor `PaymentRecord` has a direct FK to `MemberProfile`) is gated to `ADMIN_ROLES` only — `COACH` does not gain new visibility into financial data, matching the existing `apps/fees`/`apps/payments` access boundary.
+- `MemberUpdateView` replaced the single auto-generated `ModelForm` with two explicit forms (`MemberContactForm` over `accounts.User`, `MemberProfileForm` over `MemberProfile`, both in new `apps/members/forms.py`), saved together in one `transaction.atomic()` block.
+- New coach/admin-initiated, parent-self-service onboarding flow: `MemberInvitationCreateView` (dojo-scoped the same way `DojoScopedQuerysetMixin` already scopes elsewhere — a `COACH` can only invite for their own `DojoStaff` dojo(s)) creates a `RegistrationInvitation` and emails a magic link (`apps/members/services.py::send_invitation_email` — a new small function, since the only existing `send_mail()` call site in `apps/communications/services.py` is hard-coupled to an existing `MemberProfile` recipient and can't address an unregistered invitee). `MemberOnboardingView` is a genuinely public, no-login view reached via that link; on submit it creates the guardian `User` (role=PARENT, real password they set), the child `User`+`MemberProfile` (role=MEMBER, unusable password — not expected to log in independently), and the `MemberGuardian` link, all in one transaction, then marks the invitation `COMPLETED`.
+- Per the CRM-shell-leak precedent ([2026-06-30]), the three new public templates (`onboarding_form.html`, `onboarding_invalid.html`, `onboarding_success.html`) extend `public/base_public.html` and were added to `test_known_issues_regression.py`'s `MUST_USE_PUBLIC_BASE` list.
+- Explicitly out of scope (flagged, not silently dropped): CAPTCHA/anti-bot protection (no infra exists anywhere in the project; email-gated + expiring single-use token is the accepted trade-off for a small club's internal tool), adult self-registration via the same link (always creates a guardian+child pair), and a password-reset flow for the guardian account (they set their password directly during onboarding, so it's not a hard dependency, but there's still no recovery path if forgotten — Django's built-in `PasswordReset*` views aren't wired up anywhere in this project).
+- Updated `verification/checks/test_rbac_write_matrix.py::test_member_edit_rbac` — its POST payload only had the 5 old fields, so the new required `MemberProfileForm` fields (`date_of_birth`, `gender`, `emergency_contact_*`) failed validation silently (200, not saved). Fixed to submit both forms' full field set.
+
+**Prevention / Notes:**
+When splitting one `ModelForm`-backed view into two forms, audit every existing test that POSTs to that URL — a stricter/expanded required-field set makes old partial payloads fail validation without necessarily changing the HTTP status code (still 200, just re-rendering with errors), which a status-code-only assertion won't catch. `test_member_edit_rbac`'s stronger DB-state assertion (not just status code) is exactly what caught this here.
+
+---
+
+### [2026-08-10] — CRM Member Detail Page Didn't Surface Coach Roles / Certifications
+
+**Status:** Resolved
+**Severity:** Low
+**App / Module:** apps/members, templates/members
+**Environment:** Dev
+
+**Symptom:**
+A member who is also a registered coach (has a `DojoStaff` row and/or a passed `CoachCertificationRecord`) showed none of that on their CRM `/members/<pk>/` page — only belt/tier/status/dojo/joined date. Staff had to cross-reference Django admin to see someone's coaching qualifications. Caught while reviewing the two entries below: two demo "coach" test users existed as `DojoStaff` but had no `MemberProfile`, so they were invisible on `/members/` even though every real coach is expected to be a club member first.
+
+**Root Cause:**
+`MemberDetailView` (`apps/members/views.py`) never queried `DojoStaff` or `CoachCertificationRecord` for the member being viewed — `member_detail.html` only ever had fields from `MemberProfile` itself.
+
+**Fix Applied:**
+- `MemberDetailView.get_context_data` now adds `dojo_staff_roles` (`DojoStaff.objects.filter(user=member.user)`) and `coach_certifications` (`CoachCertificationRecord` via `activity_application__member`) to context.
+- `templates/members/member_detail.html` renders both as new sections (role/tier per dojo, and a course/certifying-body/exam-date/result table), only when present.
+- Added `test_member_detail_shows_coach_role_and_certification` to `verification/checks/test_object_level_access.py`.
+
+**Prevention / Notes:**
+`MemberProfile` and `DojoStaff` are still two independent tables both pointing at `accounts.User` (see the `DojoStaff.role` vs `accounts.User.role` note earlier in this log) — nothing enforces that a `DojoStaff.user` also has a `MemberProfile`. That's fine for the schema, but keep dev/demo data consistent with the real world (a coach is a member first) to avoid confusing gaps like this one.
+
+---
+
+### [2026-08-10] — `/instructors/` Redesigned: Grouped by HKTKDA Coach Tier + Detail Pages
+
+**Status:** Resolved
+**Severity:** Low
+**App / Module:** apps/dojos, apps/public, templates/public, static/css
+**Environment:** Dev
+
+**Symptom:**
+Follow-up to the same-day entry below. Once `/instructors/` could show public coaches at all, the flat single-list layout didn't match the club's real structure: HKTKDA certifies coaches at three tiers (高級教練 Senior / 中級教練 Intermediate / 初級教練 Elementary), and each coach's name needed to link somewhere.
+
+**Root Cause:**
+N/A (feature request, not a defect) — `DojoStaff` had no field capturing which HKTKDA tier a coach holds, and there was no per-coach detail page to link to.
+
+**Fix Applied:**
+- Added `DojoStaff.CoachLevel` choices (`SENIOR`/`INTERMEDIATE`/`ELEMENTARY`) and a new `coach_level` field (`apps/dojos/models.py`, migration `0003_dojostaff_coach_level.py`) — blank by default, set manually by a GM in `DojoStaffAdmin`/`DojoStaffInline` (`apps/dojos/admin.py`) once a member's `CoachCertificationRecord` shows a pass. Manual step by design, same as everywhere else in this app.
+- `InstructorListView` (`apps/public/views.py`) now groups the queryset into `instructor_groups` (one list per `CoachLevel`, in Senior → Intermediate → Elementary order) instead of returning a flat list.
+- Added `InstructorDetailView` + `public:instructor_detail` URL (`/instructors/<slug>/`) so each coach's name links to a full bio page (`templates/public/instructor_detail.html`) showing tier badge, bio, and certifications.
+- Rewrote `templates/public/instructors.html` into three tier sections; added supporting styles (card hover, tier-heading underline, tier badge) to `static/css/public.css`.
+- Updated `test_public_instructors_shows_public_coach` to set `coach_level` (otherwise it wouldn't render under any tier section) and added `test_public_instructor_detail_returns_200`.
+
+**Prevention / Notes:**
+`DojoStaff.certifications` (free-form JSON, used for the bulleted cert list) and `DojoStaff.coach_level` (structured, drives the tier grouping) are two different fields serving different purposes — don't conflate them when extending this page further.
+
+---
+
+### [2026-08-10] — Public `/instructors/` Page Renders Empty; No In-System Coach Certification Tracking
+
+**Status:** Resolved
+**Severity:** Medium
+**App / Module:** apps/public, apps/dojos, apps/activities, templates/public
+**Environment:** Dev
+
+**Symptom:**
+`/instructors/` always rendered "暫無公開教練資料" (no public instructor data), even for members who are actually qualified/registered coaches.
+
+**Root Cause:**
+1. `InstructorListView` (`apps/public/views.py`) correctly queries `DojoStaff.objects.filter(is_public=True, is_active=True)` — the query itself was never the bug. `DojoStaff.is_public` (`apps/dojos/models.py`) defaults to `False`, and nothing in the codebase ever set it `True` except the `--real-data` legacy-CSV seed mode. The standard dev seed modes (`seed_test_org_data --minimal` / `--full`) deliberately create `DojoStaff` rows with `is_public=False` for synthetic test personas — this is intentional, not a bug.
+2. There was no in-system record at all of the real qualification path: a member applies for the HKTKDA Elementary Coach Course, passes the assessment, and becomes the club's registered coach (本會註冊教練). `apps/activities/models.py` had no `ActivityType` for this and `ActivityApplication` had no exam-result fields.
+3. Secondary bug: `templates/public/instructors.html` read `cert.org` / `cert.rank`, but the only JSON keys ever written to `DojoStaff.certifications` are `org_en`/`org_zh`/`level_en`/`level_zh`/`year` — certification bullets would have rendered blank even once real `is_public=True` coaches existed.
+4. `verification/checks/test_public_routes.py`'s `test_public_instructors_returns_200` only asserted HTTP 200, never that any instructor content rendered — so the empty page was never caught by the verification suite.
+
+**Fix Applied:**
+- Added `ActivityType.COACH_CERTIFICATION` and a new `CoachCertificationRecord` model (`apps/activities/models.py`, one-to-one with `ActivityApplication`: `certifying_body`, `course_name`, `exam_date`, `result` (reuses `apps.skills.models.SkillResult`), `certificate_number`, `notes`) so the HKTKDA course application/exam result can be tracked in-system, following the same `ActivityApplication` FSM workflow already used for belt grading and referee promotion. Migration: `apps/activities/migrations/0002_alter_activitytemplate_activity_type_and_more.py`.
+- Registered `CoachCertificationRecord` as an inline on `ActivityApplicationAdmin` (`apps/activities/admin.py`).
+- **Turning a passed exam into a public `DojoStaff` row (and setting `is_public=True`) remains a manual admin step**, done via the existing `DojoStaffAdmin`/`DojoStaffInline` (`apps/dojos/admin.py`) — this matches the existing architecture, where no `ActivityApplication` FSM transition anywhere has automated cross-model side effects (every transition body is empty except for timestamps). Deliberately not automated.
+- Fixed `templates/public/instructors.html` to read `org_zh`/`org_en`/`level_zh`/`level_en`/`year` (with `zh`→`en` fallback) instead of the nonexistent `org`/`rank` keys.
+- Added `test_public_instructors_shows_public_coach` to `verification/checks/test_public_routes.py` — creates its own `is_public=True` `DojoStaff` row and asserts the coach's name renders, independent of any seed command.
+- Added a canary in `verification/checks/test_known_issues_regression.py` documenting that `seed_test_org_data --minimal`/`--full` intentionally produce zero public instructors, so this isn't mistaken for a regression later.
+
+**Prevention / Notes:**
+Route-level tests that only assert HTTP 200 do not catch "page loads but is empty" bugs — pair every public content page's 200-check with at least one test that seeds real data and asserts specific content renders.
+
+---
+
+### [2026-07-06] — Verification Suite: Role Capability Matrix + Full Dataset (v0.2.0)
+
+**Status:** Resolved  
+**Severity:** Low  
+**App / Module:** verification/ (extends v0.1.0), apps/members, apps/events, apps/activities, apps/skills  
+**Environment:** Dev
+
+**Symptom:**  
+No state-coverage test dataset existed across the 14 apps (every enum value,
+every FSM state, every role branch). No single source of truth existed for
+what each of the 7 roles can View/Create/Update/Delete per feature — a
+Blueprint-derived proposal existed but had never been checked against code.
+
+**Root Cause:**  
+Exhaustive exploration of all 14 apps' `views.py` files found the real
+codebase far more limited than the aspirational proposal assumed: zero
+`DeleteView`s exist anywhere; only 2 `CreateView`s (`EventCreateView`,
+`EnrollmentCreateView`) and 2 `UpdateView`s (`MemberUpdateView`,
+`CMSPageEditView`) exist total; zero `get_queryset()` overrides existed for
+dojo/owner-scoping in any real List/DetailView — a COACH viewing
+`MemberListView` saw *all* members org-wide, not just their own dojo's.
+
+**Fix Applied:**  
+- `verification/docs_data/role_capability_matrix.py` — records ACTUAL code
+  behavior (post-fix), not the aspirational proposal. `matrix_diff_report.py`
+  (→ `reports/matrix_diff_report.md`) logs every remaining divergence
+  explicitly (fees/payments ADMIN-only, matches Tournament-not-member-scoped,
+  communications/chatbot are stubs, `MemberProfile.status` has no access
+  enforcement anywhere) as accepted/future-work, never silently resolved.
+- **Dojo/owner scoping added** to `apps/members/views.py`
+  (`MemberListView`/`MemberDetailView`), `apps/events/views.py`
+  (`EventListView`/`EventDetailView`), `apps/activities/views.py`
+  (`ActivityListView`/`ActivityDetailView`), `apps/skills/views.py`
+  (`SkillListView`, both COACH-dojo and MEMBER/PARENT-own branches). All
+  filters end in `.distinct()` (reverse-FK joins through
+  `enrollments__dojo_id__in=...` can duplicate rows). `apps/matches/views.py`
+  deliberately left unchanged — confirmed `model = Tournament` on both views,
+  not member-owned, documented as an accepted gap.
+- `test_credentials.csv` extended 7→12 personas: `test_coach_a`/`test_coach_b`
+  at two real dojos (WongTaiSin/TaiPo), `test_member_a1`/`a2`/`b1`,
+  `test_member_suspended`/`test_member_inactive` (edge-case personas),
+  `test_parent_a` (bare `User`, no `MemberProfile` — `MemberGuardian` doesn't
+  exist yet). `generate_credentials.py` password derivation keyed by username,
+  not role, so personas sharing a role get distinct passwords.
+- `seed_test_org_data --full` (new third flag) — state-coverage dataset:
+  8 Events (4 EventType × past/upcoming, all 4 EventStatus), 3 AttendanceLog
+  (all 3 CheckInMethod — not "both", there are 3), 7 ActivityApplication
+  (one per FSM state, built via real `@transition` chains since
+  `state = FSMField(protected=True)` blocks direct assignment), 7 SkillRecord
+  (all 7 SkillCategory), 5 AnnualFee (all 5 FeeStatus), 6 PaymentRecord (all
+  6 PaymentStatus — not 5), 5 Notification (all 5 NotificationStatus, one
+  WHATSAPP+FAILED cross-referencing the v0.1.0 canary), 7 ContentBlock (all 7
+  PageSection — uncovered in the original ask), 2 Tournaments + 7 MatchEntry
+  split 4+3 (only 5 MemberProfiles exist and `unique_member_per_tournament`
+  caps one tournament at 5 entries, so 7 entries covering 6 MatchResult
+  values + 1 blank/pending state need 2 tournaments), 6 FAQEntry (all 6
+  FAQCategory — not 4), 2 EnrollmentLead. Writes
+  `verification/fixtures/full_dataset_manifest.json`.
+- `verification/PERSONAS.md` — generated login/visibility table for manual UAT.
+- New tests: `test_rbac_write_matrix.py` (POST to the 3 real write views;
+  every DENY case asserts 403 **and** DB-unchanged), `test_object_level_access.py`
+  (proves the scoping fixes actually isolate dojo/owner data),
+  `test_public_forms.py` (`enrollment:lead_create`, the only fully-public
+  CreateView), `test_activity_fsm_transitions.py` (valid/invalid FSM chains,
+  direct `.state =` assignment raises `AttributeError`). New pytest markers:
+  `write_path`, `fsm`.
+- `verification/conftest.py`: new `seed_full_dataset_in_db` session fixture
+  calls the real management commands via `call_command()` inside
+  `override_settings(DEBUG=True)` — pytest-django forces `DEBUG=False` during
+  test runs (a deliberate Django testing best practice), which would otherwise
+  trip the commands' `if not settings.DEBUG: raise CommandError` production
+  guard even though the pytest test DB is fully isolated and throwaway.
+
+**Prevention / Notes:**  
+- 173 tests total (135 from v0.1.0 + 38 new), all passing.
+- `seed_test_org_data --full` re-run twice against the dev DB produces a
+  byte-identical `full_dataset_manifest.json` (anchored dates, no
+  `date.today()` in seeded values) — confirmed deterministic.
+- When closing any gap logged in `matrix_diff_report.md` (e.g. adding
+  MEMBER/PARENT access to fees/payments, or a MatchEntry-level view), update
+  the diff report AND `role_capability_matrix.py` together — never silently.
+
+---
+
+### [2026-07-02] — Verification Suite Added (v0.1.0)
+
+**Status:** Resolved  
+**Severity:** Low  
+**App / Module:** verification/ (new top-level package)  
+**Environment:** Dev
+
+**Symptom:**  
+No automated way to check that the running site matched what README.md / DEBUGLOG.md /
+Blueprint v0.7.1 described. All `apps/*/tests.py` were empty boilerplate. No seed data,
+no fixtures, no role-based login tests.
+
+**Root Cause:**  
+The project reached v0.3.1 (frontend complete) without a cross-cutting verification layer.
+Unit-test stubs in individual apps are insufficient for doc-vs-reality checks that span
+roles, routes, legacy data, and known-issue regressions.
+
+**Fix Applied:**  
+Created `verification/` package (pytest-based, separate from `apps/*/tests.py`) with:
+
+- `verification/fixtures/legacy_data/` — pre-supplied legacy CSVs (161 members, 24 dojo
+  sessions, 9 district codes, 2 area groups, member credentials) + 148 portrait photos.
+- `verification/scraper/legacy_site_scraper.py` — scrapes one URL (`/Public/Intro_adv`)
+  to produce `legacy_org_intro.csv`. TLS cert mismatch on advancedtkd.net → `verify=False`,
+  documented. District/timetable data replaced by pre-supplied CSVs (richer).
+- `verification/scraper/generate_credentials.py` — deterministic 7-role credential CSV.
+- `apps/accounts/management/commands/seed_test_users.py` — idempotent, DEBUG-guarded loader.
+- `apps/accounts/management/commands/seed_test_org_data.py` — `--minimal` (RBAC tests) and
+  `--real-data` (161 members from memebers.csv + goals.csv + photos) modes.
+  CRITICAL fix: `DojoEntity` has `unique_head_coach_per_dojo` constraint → only Level 9
+  (Chairman) gets `HEAD_COACH`; Level 7-8 (President/VP) get `ASSISTANT_COACH`.
+  Tier heuristic: Level 1-3 → `STUDENT_BLACK`, Level 4-9 → `ADULT_BLACK`.
+- `verification/docs_data/` — hand-transcribed ground truth (roles, URLs, tiers, districts,
+  district crosswalk, known-issues catalogue).
+- `verification/checks/`:
+  - `test_docs_consistency.py` — 14-app count, roles, district enum, URL structure, tier prices.
+  - `test_known_issues_regression.py` — canary tests for DEBUGLOG gaps (shell-leak, WhatsApp
+    stub, payment screenshot storage, dojo schedule fields).
+  - `test_public_routes.py` — public route 200s, founding-year warn check.
+  - `test_legacy_fixture_consistency.py` — district crosswalk (DIRECT/APPROXIMATE/UNMAPPABLE),
+    fixture row-count sanity.
+  - `test_rbac_matrix.py` — 7 roles × 14 CRM routes → 200/403/302 matrix.
+- `verification/reporting/` — pytest plugin writing `results_latest.{json,csv}` after every run.
+- `requirements/test.txt` — adds requests, beautifulsoup4, lxml, openpyxl, pytest-socket,
+  freezegun on top of `requirements/dev.txt`.
+- `verification/README.md` — full setup, scraper, seed, run, canary-test convention.
+
+**Prevention / Notes:**  
+- Run `pytest verification/checks -v` before merging any
+  structural change (new app, new role, route rename, district addition).
+- When a DEBUGLOG known-issue is fixed, update the canary in
+  `test_known_issues_regression.py` + `docs_data/debuglog_known_issues.py` first.
+- `docs_data/` modules are **manual sync points** — update them whenever README or
+  DEBUGLOG changes, as they are not auto-parsed from prose.
+- `blueprint_districts.py` sources from `apps/dojos/models.py` (not the Blueprint PDF).
+- `memebers.csv` Level field = HKTKD Dan grade (1-9段), NOT Django BeltLevel — Dan grade
+  is stored in `DojoStaff.certifications` JSON as a synthesised entry.
+
+---
+
 ### [2026-06-30] — accounts App: Login Page Leaked CRM Sidebar to Logged-Out Visitors
 
 **Status:** Resolved

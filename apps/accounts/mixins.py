@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.contrib.auth.mixins import AccessMixin
 from django.core.exceptions import PermissionDenied
 

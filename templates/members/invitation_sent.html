@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}邀請已發送 — 技擊跆拳道會 CRM{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-4">邀請已建立 Invitation Created</h1>
+
+{% if email_sent %}
+<div class="alert alert-success">邀請電郵已發送至 {{ invitation.contact_email }}。</div>
+{% else %}
+<div class="alert alert-warning">
+    電郵發送失敗（可能是開發環境未設定 SMTP）。請直接複製以下連結發送給家長/監護人。
+</div>
+{% endif %}
+
+<p class="text-muted">道場 Dojo: {{ invitation.target_dojo.name }}</p>
+<p class="text-muted">失效日期 Expires: {{ invitation.expires_at }}</p>
+
+<div class="input-group mb-4" style="max-width: 700px;">
+    <input type="text" class="form-control" value="{{ onboarding_url }}" readonly>
+</div>
+
+<a class="btn btn-primary" href="{% url 'members:invitation_create' %}">再邀請一位 Invite Another</a>
+<a class="btn btn-outline-secondary" href="{% url 'members:member_list' %}">返回會員列表 Back to Members</a>
+{% endblock %}

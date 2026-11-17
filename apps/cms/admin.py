@@ -6,11 +6,11 @@ from .models import Announcement, ContentBlock, NewsPost
 
 @admin.register(ContentBlock)
 class ContentBlockAdmin(admin.ModelAdmin):
-    list_display    = ('title', 'section', 'order', 'status', 'is_featured', 'published_at')
-    list_filter     = ('section', 'status', 'is_featured')
-    search_fields   = ('title',)
+    list_display = ('title', 'section', 'order', 'status', 'is_featured', 'published_at')
+    list_filter = ('section', 'status', 'is_featured')
+    search_fields = ('title',)
     readonly_fields = ('created_at', 'updated_at')
-    actions         = ['action_publish', 'action_archive']
+    actions = ['action_publish', 'action_archive']
 
     @admin.action(description='Publish selected content blocks')
     def action_publish(self, request, queryset):
@@ -27,11 +27,11 @@ class ContentBlockAdmin(admin.ModelAdmin):
 
 @admin.register(Announcement)
 class AnnouncementAdmin(admin.ModelAdmin):
-    list_display    = ('title', 'status', 'is_pinned', 'published_at', 'expires_at', 'is_active')
-    list_filter     = ('status', 'is_pinned')
-    search_fields   = ('title',)
+    list_display = ('title', 'status', 'is_pinned', 'published_at', 'expires_at', 'is_active')
+    list_filter = ('status', 'is_pinned')
+    search_fields = ('title',)
     readonly_fields = ('created_at', 'updated_at')
-    actions         = ['action_publish']
+    actions = ['action_publish']
 
     @admin.display(description='Active', boolean=True)
     def is_active(self, obj):
@@ -47,12 +47,12 @@ class AnnouncementAdmin(admin.ModelAdmin):
 
 @admin.register(NewsPost)
 class NewsPostAdmin(admin.ModelAdmin):
-    list_display    = ('title', 'status', 'published_at', 'created_by')
-    list_filter     = ('status',)
-    search_fields   = ('title', 'excerpt')
+    list_display = ('title', 'status', 'published_at', 'created_by')
+    list_filter = ('status',)
+    search_fields = ('title', 'excerpt')
     prepopulated_fields = {'slug': ('title',)}
     readonly_fields = ('created_at', 'updated_at')
-    actions         = ['action_publish']
+    actions = ['action_publish']
 
     @admin.action(description='Publish selected news posts')
     def action_publish(self, request, queryset):

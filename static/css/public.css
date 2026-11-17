@@ -26,4 +26,47 @@ main {
   border: 1px solid var(--color-border);
   border-radius: 8px;
   padding: 1rem;
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.instructor-card:hover {
+  box-shadow: 0 4px 14px rgba(26, 26, 46, 0.1);
+  transform: translateY(-2px);
+}
+
+.instructor-card img {
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+}
+
+.instructor-card h5 a {
+  color: var(--color-primary);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.instructor-card h5 a:hover {
+  color: var(--color-accent);
+}
+
+.instructor-level-title {
+  color: var(--color-primary);
+  font-size: 1.35rem;
+  font-weight: 700;
+  padding-bottom: 0.5rem;
+  margin-bottom: 1.25rem;
+  border-bottom: 3px solid var(--color-accent);
+  display: inline-block;
+}
+
+.instructor-level-badge {
+  display: inline-block;
+  background-color: rgba(201, 168, 76, 0.15);
+  color: var(--color-primary);
+  border: 1px solid var(--color-accent);
+  border-radius: 999px;
+  padding: 0.25rem 0.9rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin: 0.25rem 0 0.75rem;
 }

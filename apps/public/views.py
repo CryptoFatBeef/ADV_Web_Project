@@ -33,6 +33,29 @@ class InstructorListView(ListView):
     model = DojoStaff
     template_name = 'public/instructors.html'
     context_object_name = 'instructors'
+    queryset = (
+        DojoStaff.objects.filter(is_public=True, is_active=True)
+        .select_related('user', 'dojo')
+        .order_by('display_order')
+    )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        instructors = context['instructors']
+        context['instructor_groups'] = [
+            (label, [staff for staff in instructors if staff.coach_level == value])
+            for value, label in DojoStaff.CoachLevel.choices
+        ]
+        context['has_graded_instructors'] = any(group for _, group in context['instructor_groups'])
+        return context
+
+
+class InstructorDetailView(DetailView):
+    model = DojoStaff
+    template_name = 'public/instructor_detail.html'
+    context_object_name = 'staff'
+    slug_field = 'slug'
+    slug_url_kwarg = 'slug'
     queryset = DojoStaff.objects.filter(is_public=True, is_active=True).select_related('user', 'dojo')
 
 

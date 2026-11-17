@@ -5,8 +5,8 @@ from .models import KPNPDevice, MatchEntry, Tournament
 
 
 class MatchEntryInline(admin.TabularInline):
-    model  = MatchEntry
-    extra  = 1
+    model = MatchEntry
+    extra = 1
     fields = (
         'member', 'belt_at_match', 'weight_class',
         'result', 'medal', 'placement', 'score', 'opponent_name',
@@ -19,17 +19,17 @@ class MatchEntryInline(admin.TabularInline):
 
 
 class KPNPDeviceInline(admin.TabularInline):
-    model  = KPNPDevice
-    extra  = 0
+    model = KPNPDevice
+    extra = 0
     fields = ('device_type', 'serial_number', 'notes')
 
 
 @admin.register(Tournament)
 class TournamentAdmin(admin.ModelAdmin):
-    inlines         = [MatchEntryInline, KPNPDeviceInline]
-    list_display    = ('name', 'match_type', 'event', 'is_international', 'organised_by', 'entry_count')
-    list_filter     = ('match_type', 'is_international')
-    search_fields   = ('name', 'organised_by', 'location')
+    inlines = [MatchEntryInline, KPNPDeviceInline]
+    list_display = ('name', 'match_type', 'event', 'is_international', 'organised_by', 'entry_count')
+    list_filter = ('match_type', 'is_international')
+    search_fields = ('name', 'organised_by', 'location')
     readonly_fields = ('created_at', 'updated_at')
 
     def get_queryset(self, request):
@@ -44,9 +44,9 @@ class TournamentAdmin(admin.ModelAdmin):
 
 @admin.register(MatchEntry)
 class MatchEntryAdmin(admin.ModelAdmin):
-    list_display    = ('member', 'tournament', 'belt_at_match', 'weight_class', 'result', 'medal', 'placement')
-    list_filter     = ('result', 'medal', 'weight_class', 'tournament__match_type')
-    search_fields   = ('member__member_id', 'member__user__last_name', 'tournament__name')
+    list_display = ('member', 'tournament', 'belt_at_match', 'weight_class', 'result', 'medal', 'placement')
+    list_filter = ('result', 'medal', 'weight_class', 'tournament__match_type')
+    search_fields = ('member__member_id', 'member__user__last_name', 'tournament__name')
     readonly_fields = ('created_at', 'updated_at')
 
     def get_queryset(self, request):
