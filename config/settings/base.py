@@ -130,9 +130,9 @@ PAYME_MERCHANT_ID = config('PAYME_MERCHANT_ID', default='')
 PAYME_API_KEY = config('PAYME_API_KEY', default='')
 
 # ----- OpenRouter (Chatbot) -----
-OPENROUTER_API_KEY  = config('OPENROUTER_API_KEY',  default='')
+OPENROUTER_API_KEY = config('OPENROUTER_API_KEY',  default='')
 OPENROUTER_BASE_URL = config('OPENROUTER_BASE_URL', default='https://openrouter.ai/api/v1')
-OPENROUTER_MODEL    = config('OPENROUTER_MODEL',    default='anthropic/claude-sonnet-4-6')
+OPENROUTER_MODEL = config('OPENROUTER_MODEL',    default='anthropic/claude-sonnet-4-6')
 
 # ----- WhatsApp Business API -----
 WHATSAPP_API_TOKEN = config('WHATSAPP_API_TOKEN', default='')

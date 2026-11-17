@@ -4,11 +4,11 @@ from .models import ChatMessage, ChatSession, FAQEntry
 
 @admin.register(FAQEntry)
 class FAQEntryAdmin(admin.ModelAdmin):
-    list_display    = ('question_preview', 'category', 'order', 'is_active', 'updated_at')
-    list_filter     = ('category', 'is_active')
-    search_fields   = ('question', 'answer')
+    list_display = ('question_preview', 'category', 'order', 'is_active', 'updated_at')
+    list_filter = ('category', 'is_active')
+    search_fields = ('question', 'answer')
     readonly_fields = ('created_at', 'updated_at')
-    actions         = ['action_activate', 'action_deactivate']
+    actions = ['action_activate', 'action_deactivate']
 
     @admin.display(description='Question')
     def question_preview(self, obj):
@@ -26,10 +26,10 @@ class FAQEntryAdmin(admin.ModelAdmin):
 
 
 class ChatMessageInline(admin.TabularInline):
-    model           = ChatMessage
-    extra           = 0
+    model = ChatMessage
+    extra = 0
     readonly_fields = ('role', 'content', 'input_tokens', 'output_tokens', 'created_at')
-    can_delete      = False
+    can_delete = False
 
     def has_add_permission(self, request, obj=None):
         return False
@@ -37,12 +37,14 @@ class ChatMessageInline(admin.TabularInline):
 
 @admin.register(ChatSession)
 class ChatSessionAdmin(admin.ModelAdmin):
-    list_display    = ('session_key', 'member', 'started_at', 'last_active',
-                       'is_closed', 'message_count')
-    list_filter     = ('is_closed',)
-    search_fields   = ('session_key', 'member__member_id', 'member__user__last_name')
+    list_display = (
+        'session_key', 'member', 'started_at', 'last_active',
+        'is_closed', 'message_count',
+    )
+    list_filter = ('is_closed',)
+    search_fields = ('session_key', 'member__member_id', 'member__user__last_name')
     readonly_fields = ('session_key', 'started_at', 'last_active')
-    inlines         = [ChatMessageInline]
+    inlines = [ChatMessageInline]
 
     def get_queryset(self, request):
         from django.db.models import Count

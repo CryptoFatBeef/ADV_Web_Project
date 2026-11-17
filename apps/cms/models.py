@@ -4,37 +4,37 @@ from django.utils import timezone
 
 
 class PageSection(models.TextChoices):
-    HOME     = 'HOME',     'Home'
-    ABOUT    = 'ABOUT',    'About'
-    COACHES  = 'COACHES',  'Coaches'
+    HOME = 'HOME',     'Home'
+    ABOUT = 'ABOUT',    'About'
+    COACHES = 'COACHES',  'Coaches'
     SCHEDULE = 'SCHEDULE', 'Schedule'
-    NEWS     = 'NEWS',     'News'
-    CONTACT  = 'CONTACT',  'Contact'
-    OTHER    = 'OTHER',    'Other'
+    NEWS = 'NEWS',     'News'
+    CONTACT = 'CONTACT',  'Contact'
+    OTHER = 'OTHER',    'Other'
 
 
 class ContentStatus(models.TextChoices):
-    DRAFT     = 'DRAFT',     'Draft'
+    DRAFT = 'DRAFT',     'Draft'
     PUBLISHED = 'PUBLISHED', 'Published'
-    ARCHIVED  = 'ARCHIVED',  'Archived'
+    ARCHIVED = 'ARCHIVED',  'Archived'
 
 
 class ContentBlock(models.Model):
-    title        = models.CharField(max_length=200)
-    section      = models.CharField(max_length=20, choices=PageSection.choices)
-    status       = models.CharField(max_length=20, choices=ContentStatus.choices, default=ContentStatus.DRAFT)
-    order        = models.PositiveIntegerField(default=0)
-    body         = models.TextField()
-    image        = models.ImageField(upload_to='cms/', blank=True)
-    is_featured  = models.BooleanField(default=False)
+    title = models.CharField(max_length=200)
+    section = models.CharField(max_length=20, choices=PageSection.choices)
+    status = models.CharField(max_length=20, choices=ContentStatus.choices, default=ContentStatus.DRAFT)
+    order = models.PositiveIntegerField(default=0)
+    body = models.TextField()
+    image = models.ImageField(upload_to='cms/', blank=True)
+    is_featured = models.BooleanField(default=False)
     published_at = models.DateTimeField(null=True, blank=True)
-    created_by   = models.ForeignKey(
+    created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
         related_name='content_blocks',
     )
-    created_at   = models.DateTimeField(auto_now_add=True)
-    updated_at   = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ['section', 'order', '-published_at']
@@ -44,19 +44,19 @@ class ContentBlock(models.Model):
 
 
 class Announcement(models.Model):
-    title        = models.CharField(max_length=200)
-    body         = models.TextField()
-    status       = models.CharField(max_length=20, choices=ContentStatus.choices, default=ContentStatus.DRAFT)
-    is_pinned    = models.BooleanField(default=False)
+    title = models.CharField(max_length=200)
+    body = models.TextField()
+    status = models.CharField(max_length=20, choices=ContentStatus.choices, default=ContentStatus.DRAFT)
+    is_pinned = models.BooleanField(default=False)
     published_at = models.DateTimeField(null=True, blank=True)
-    expires_at   = models.DateTimeField(null=True, blank=True)
-    created_by   = models.ForeignKey(
+    expires_at = models.DateTimeField(null=True, blank=True)
+    created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
         related_name='announcements',
     )
-    created_at   = models.DateTimeField(auto_now_add=True)
-    updated_at   = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ['-is_pinned', '-published_at']
@@ -75,20 +75,20 @@ class Announcement(models.Model):
 
 
 class NewsPost(models.Model):
-    title        = models.CharField(max_length=200)
-    slug         = models.SlugField(unique=True)
-    status       = models.CharField(max_length=20, choices=ContentStatus.choices, default=ContentStatus.DRAFT)
-    excerpt      = models.CharField(max_length=300, blank=True)
-    body         = models.TextField()
-    cover_image  = models.ImageField(upload_to='news/', blank=True)
+    title = models.CharField(max_length=200)
+    slug = models.SlugField(unique=True)
+    status = models.CharField(max_length=20, choices=ContentStatus.choices, default=ContentStatus.DRAFT)
+    excerpt = models.CharField(max_length=300, blank=True)
+    body = models.TextField()
+    cover_image = models.ImageField(upload_to='news/', blank=True)
     published_at = models.DateTimeField(null=True, blank=True)
-    created_by   = models.ForeignKey(
+    created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
         related_name='news_posts',
     )
-    created_at   = models.DateTimeField(auto_now_add=True)
-    updated_at   = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ['-published_at']
