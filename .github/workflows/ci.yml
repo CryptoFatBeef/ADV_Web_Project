@@ -38,3 +38,63 @@ jobs:
 
       - name: Run migrations
         run: python manage.py migrate --settings=config.settings.dev
+
+  verification:
+    name: Verification Suite
+    runs-on: ubuntu-latest
+
+    env:
+      DJANGO_SECRET_KEY: ci-insecure-key-not-used-in-production
+      DJANGO_DEBUG: "True"
+      DJANGO_ALLOWED_HOSTS: "localhost"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          # test.txt includes dev.txt, which includes base.txt.
+          cache-dependency-path: |
+            requirements/base.txt
+            requirements/dev.txt
+            requirements/test.txt
+
+      - name: Install test dependencies
+        run: pip install -r requirements/test.txt
+
+      - name: Run migrations
+        run: python manage.py migrate --settings=config.settings.dev
+
+      - name: Generate test credentials on the runner
+        run: python -m verification.scraper.generate_credentials
+
+      - name: Run verification checks
+        run: |
+          set -o pipefail
+          python -m pytest verification/checks -q --tb=line | tee pytest-summary.txt
+          python - << 'PY'
+          import pathlib, re, sys
+          text = pathlib.Path("pytest-summary.txt").read_text()
+          summary = ""
+          for line in text.splitlines():
+              if re.search(r"\bpassed\b", line) and re.search(r"\bskipped\b", line):
+                  summary = line
+          ok = (
+              re.search(r"\b176 passed\b", summary)
+              and re.search(r"\b9 skipped\b", summary)
+              and not re.search(r"\b(failed|error)\b", summary)
+          )
+          if not ok:
+              print("Expected 176 passed, 9 skipped, and no failures.")
+              print("Summary line:", summary or "<none>")
+              sys.exit(1)
+          print("Counts OK:", summary.strip())
+          PY
+
+      - name: Remove generated credentials
+        if: always()
+        run: rm -f verification/fixtures/test_credentials.csv verification/fixtures/test_credentials.xlsx verification/PERSONAS.md pytest-summary.txt

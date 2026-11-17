@@ -21,11 +21,12 @@ python -m verification.scraper.generate_credentials
 
 # 3. Seed dev DB
 python manage.py seed_test_users --settings=config.settings.dev
-python manage.py seed_test_org_data --minimal --settings=config.settings.dev
+# Default mode is the small RBAC seed. There is no --minimal flag.
+python manage.py seed_test_org_data --settings=config.settings.dev
 python manage.py seed_test_org_data --full --settings=config.settings.dev
 
 # 4. Run all checks
-pytest verification/checks --settings=config.settings.dev -v
+pytest verification/checks -v
 
 # Results written to:
 #   verification/reports/results_latest.json
@@ -81,8 +82,8 @@ only — see `verification/conftest.py` for why this is safe.)
 ### Step 3 — Run checks
 
 ```bash
-# All checks
-pytest verification/checks --settings=config.settings.dev -v
+# All checks. DJANGO_SETTINGS_MODULE comes from verification/pytest.ini.
+pytest verification/checks -v
 
 # By marker
 pytest verification/checks -m docs_consistency -v

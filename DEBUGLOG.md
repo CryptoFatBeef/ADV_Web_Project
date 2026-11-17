@@ -290,7 +290,7 @@ Created `verification/` package (pytest-based, separate from `apps/*/tests.py`) 
 - `verification/README.md` — full setup, scraper, seed, run, canary-test convention.
 
 **Prevention / Notes:**  
-- Run `pytest verification/checks --settings=config.settings.dev -v` before merging any
+- Run `pytest verification/checks -v` before merging any
   structural change (new app, new role, route rename, district addition).
 - When a DEBUGLOG known-issue is fixed, update the canary in
   `test_known_issues_regression.py` + `docs_data/debuglog_known_issues.py` first.

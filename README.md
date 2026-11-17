@@ -30,12 +30,12 @@ A comprehensive CRM and public website management system built for 技擊跆拳�
 | Skills Tracking | Per-exam skill records, displayed on member profile page |
 | Events & Exams | Unified event model (training / exam / tournament / other), attendance tracking |
 | Fees & Invoicing | Annual membership fees, WeasyPrint PDF invoices, payment tracking |
-| Payments | Stripe (international) \+ PayMe (HK local) dual gateway |
+| Payments | Stripe (international cards) and FPS QR plus email matching (HK local) |
 | Communications | In-app notifications, email, WhatsApp |
 | Public Website | Public-facing marketing site — homepage, about, instructor bios, dojo info, news, black belt showcase, enrollment leads (no login required) |
 | Public Website CMS | Editor-managed content (news posts, static content blocks) backing the public site |
 | Match Management | Tournament and match result tracking |
-| Chatbot | Phase 1 FAQ bot via Claude API \+ n8n |
+| Chatbot | Django-native FAQ bot via OpenRouter |
 | RBAC | Role-based access control across all modules |
 
 **System Spec Blueprint:** `docs/System_Spec_Blueprint_V0.7.1.pdf`
@@ -46,14 +46,14 @@ A comprehensive CRM and public website management system built for 技擊跆拳�
 
 | Layer | Technology |
 | :---- | :---- |
-| Language | Python 3.11+ |
+| Language | Python 3.11 or 3.12 (CI uses 3.11) |
 | Framework | Django 4.x |
 | Frontend | Bootstrap 5 |
 | Database (dev) | SQLite 3 |
 | Database (prod) | PostgreSQL 15+ |
 | PDF Generation | WeasyPrint |
-| Payments | Stripe SDK \+ PayMe HK API |
-| Chatbot | Claude API \+ n8n (self-hosted) |
+| Payments | Stripe, plus FPS QR codes and email matching |
+| Chatbot | Django-native OpenRouter client |
 | Tunnel / Proxy | Cloudflare Tunnel |
 | Dev Environment | VS Code |
 | Version Control | GitHub |
@@ -80,7 +80,7 @@ ADV_Web_Project/
 │   ├── activities/          # Belt grading / referee promotion / competition applications (FSM workflow)
 │   ├── skills/              # Skill records per exam
 │   ├── fees/                # Annual fees, invoices
-│   ├── payments/            # Stripe + PayMe gateway integration
+│   ├── payments/            # Stripe plus FPS QR / email matching
 │   ├── communications/      # In-app, email, WhatsApp
 │   ├── cms/                 # Public website content management
 │   ├── matches/             # Match and tournament results
@@ -152,7 +152,7 @@ authenticated views. Same reasoning applies to `/showcase/` (public) vs. `/membe
 
 ### Prerequisites
 
-- Python 3.11+  
+- Python 3.11 or 3.12 (CI uses 3.11). Django 4.2 does not officially support 3.13, and pinned `PyMuPDF==1.24.9` has no cp313 wheel.  
 - Git  
 - VS Code (recommended extensions: Python, Django, GitLens)
 
@@ -223,8 +223,8 @@ Copy `.env.example` to `.env` and fill in all values. **Never commit `.env` to G
 | `STRIPE_PUBLIC_KEY` | ✅ | Stripe publishable key | `pk_test_xxxxx` |
 | `STRIPE_SECRET_KEY` | ✅ | Stripe secret key | `sk_test_xxxxx` |
 | `STRIPE_WEBHOOK_SECRET` | ✅ | Stripe webhook signing secret | `whsec_xxxxx` |
-| `PAYME_MERCHANT_ID` | ✅ | PayMe merchant ID | `xxxxx` |
-| `PAYME_API_KEY` | ✅ | PayMe API key | `xxxxx` |
+| `PAYME_MERCHANT_ID` | Unused leftover | Loaded so an existing deploy can still set it. App code does not read it. | `xxxxx` |
+| `PAYME_API_KEY` | Unused leftover | Same. HK local payments use an FPS QR and email matching, not a PayMe API. | `xxxxx` |
 | `OPENROUTER_API_KEY` | ✅ | OpenRouter API key (chatbot LLM backend) | `sk-or-xxxxx` |
 | `OPENROUTER_BASE_URL` | ✅ | OpenRouter API base URL | `https://openrouter.ai/api/v1` |
 | `OPENROUTER_MODEL` | ✅ | OpenRouter model identifier — switchable without code changes | `anthropic/claude-sonnet-4-6` |
@@ -251,11 +251,11 @@ Copy `.env.example` to `.env` and fill in all values. **Never commit `.env` to G
 | `events` | Event model (event\_type field), attendance for classes and exams |
 | `skills` | SkillRecord per exam — independent model, SQLite-compatible (no ArrayField) |
 | `fees` | Annual fee setup, invoice generation (WeasyPrint) |
-| `payments` | Stripe \+ PayMe integration, payment records, webhook handlers |
+| `payments` | Stripe records plus FPS QR codes and email matching |
 | `communications` | Notification hub — in-app, email, WhatsApp dispatch |
 | `cms` | Public website content blocks, news (`NewsPost`), announcements |
 | `matches` | Tournament brackets, match results, competitor records |
-| `chatbot` | FAQ entries, chatbot config, Claude API \+ n8n webhook bridge |
+| `chatbot` | FAQ entries and a Django-native OpenRouter chatbot |
 | `public` | Public-facing marketing site — no models of its own; reads data from `dojos`, `cms`, `members` to render homepage, about, instructor bios, dojo listings, news, and black belt showcase |
 | `enrollment` | Public enrollment lead capture (`EnrollmentLead` model with mandatory PDPO consent field) — no login required |
 
@@ -297,10 +297,13 @@ separate from `apps/*/tests.py`.
 
 ```bash
 pip install -r requirements/test.txt
-python manage.py seed_test_users --settings=config.settings.dev
-python manage.py seed_test_org_data --settings=config.settings.dev
-pytest verification/checks --settings=config.settings.dev -v
+python manage.py migrate --settings=config.settings.dev
+# Writes verification/fixtures/test_credentials.csv. That file is gitignored; do not commit it.
+python -m verification.scraper.generate_credentials
+pytest verification/checks
 ```
+
+`pytest` reads `DJANGO_SETTINGS_MODULE` from `verification/pytest.ini`. Do not pass `--settings`; pytest does not recognize that flag. Without the generated CSV, tests that need the full dataset skip. With the CSV and no `verification/fixtures/legacy_data/`, the suite is 176 passed and 9 skipped.
 
 Results: `verification/reports/results_latest.json` / `.csv`
 

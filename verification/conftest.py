@@ -186,7 +186,17 @@ def seed_full_dataset_in_db(django_db_setup, django_db_blocker):
     dev/prod database from the CLI — it says nothing about the isolated,
     throwaway pytest test DB, so it's safe to override DEBUG=True for the
     duration of these two calls only.
+
+    The credential CSV is generated locally and gitignored. A fresh clone
+    does not have it; skip the tests that need this dataset instead of
+    failing in seed_test_users.
     """
+    if not _CREDENTIALS_CSV.is_file():
+        pytest.skip(
+            "verification/fixtures/test_credentials.csv is absent "
+            "(generate it locally with python -m verification.scraper.generate_credentials; "
+            "do not commit it)"
+        )
     with django_db_blocker.unblock():
         from django.core.management import call_command
         from django.test import override_settings
